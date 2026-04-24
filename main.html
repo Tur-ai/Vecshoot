@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pilih Karakter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'modal-bg': '#404040',
+                        'input-bg': '#d9d9d9',
+                        'btn-bg': '#cf532b',
+                        'btn-hover': '#b54622'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="min-h-screen bg-cover bg-center bg-no-repeat flex items-center justify-center font-sans antialiased" 
+      style="background-image: url('assets/BGLapang.png');">
+
+    <div class="bg-modal-bg rounded-[20px] p-10 w-[420px] shadow-2xl flex flex-col items-center">
+        
+        <h3 class="text-white text-2xl font-serif mb-5 tracking-wide">Siapa Namamu?</h3>
+        <input type="text" id="nama" 
+            class="w-[85%] bg-input-bg text-gray-800 rounded-full px-6 py-3 mb-8 outline-none focus:ring-4 focus:ring-blue-400/50 text-center placeholder-gray-500 text-lg transition-all" 
+            placeholder="Masukkan Nama">
+        
+        <h3 class="text-white text-2xl font-serif mb-5 tracking-wide">Pilih Karakter</h3>
+        
+        <ul class="flex justify-center gap-4 mb-8 w-full" id="daftar-karakter">
+            <li>
+                <img src="assets/karakter-1.png" 
+                     class="w-[80px] h-[100px] object-contain cursor-pointer rounded-xl transition-all duration-200 hover:scale-105" 
+                     alt="Karakter 1" data-id="karakter_1">
+            </li>
+            <li>
+                <img src="assets/karakter-2.png" 
+                     class="w-[80px] h-[100px] object-contain cursor-pointer rounded-xl transition-all duration-200 hover:scale-105" 
+                     alt="Karakter 2" data-id="karakter_2">
+            </li>
+            <li>
+                <img src="assets/karakter3.png" 
+                     class="w-[80px] h-[100px] object-contain cursor-pointer rounded-xl transition-all duration-200 hover:scale-105" 
+                     alt="Karakter 3" data-id="karakter_3">
+            </li>
+        </ul>
+        
+        <button id="btn-simpan" 
+            class="bg-btn-bg hover:bg-btn-hover text-black font-semibold text-xl py-2 px-10 rounded-full transition-colors shadow-md">
+            Simpan
+        </button>
+    </div>
+
+    <script>
+        const inputNama = document.getElementById('nama');
+        const daftarKarakter = document.querySelectorAll('#daftar-karakter img');
+        const btnSimpan = document.getElementById('btn-simpan');
+
+        let karakterTerpilih = null;
+
+        // Logika pemilihan karakter
+        daftarKarakter.forEach((img) => {
+            img.addEventListener('click', function() {
+                // 1. Reset styling untuk semua gambar (hapus border dan background)
+                daftarKarakter.forEach(el => {
+                    // Menghapus utility class Tailwind untuk state aktif
+                    el.classList.remove('ring-4', 'ring-green-400', 'bg-green-400/20');
+                });
+
+                // 2. Beri styling (visual feedback) ke karakter yang sedang di-klik menggunakan Tailwind classes
+                this.classList.add('ring-4', 'ring-green-400', 'bg-green-400/20');
+
+                // 3. Simpan data karakter yang dipilih (bisa pakai src atau data-id)
+                karakterTerpilih = this.getAttribute('data-id'); 
+                console.log("Karakter dipilih:", karakterTerpilih);
+            });
+        });
+
+        // Logika penyimpanan data
+        btnSimpan.addEventListener('click', () => {
+            const namaUser = inputNama.value.trim();
+
+            // Validasi Input
+            if (!namaUser) {
+                alert("Silakan masukkan namamu dulu ya!");
+                inputNama.focus();
+                return;
+            }
+
+            if (!karakterTerpilih) {
+                alert("Pilih salah satu karakter jagoanmu!");
+                return;
+            }
+
+            // Eksekusi penyimpanan data
+            const dataPlayer = {
+                nama: namaUser,
+                karakter: karakterTerpilih
+            };
+
+            console.log("Data Berhasil Disimpan:", dataPlayer);
+            alert(`Halo ${namaUser}! Karaktermu sudah siap.`);
+
+            // Redirect ke halaman utama
+            // window.location.href = 'main.html';
+        });
+    </script>
+</body>
+</html>

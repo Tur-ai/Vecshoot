@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Physics Game UI</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: #0d0d0d;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  /* ── TAB BAR ── */
+  .tab-bar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    justify-content: center;
+    gap: 0;
+    background: rgba(10,10,10,0.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    padding: 0 40px;
+  }
+
+  .tab {
+    padding: 16px 32px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    color: rgba(255,255,255,0.35);
+    border-bottom: 2px solid transparent;
+    transition: all 0.25s;
+  }
+
+  .tab.active-success {
+    color: #69f0ae;
+    border-bottom-color: #69f0ae;
+  }
+
+  .tab.active-fail {
+    color: #ff5252;
+    border-bottom-color: #ff5252;
+  }
+
+  .tab:not(.active-success):not(.active-fail):hover {
+    color: rgba(255,255,255,0.65);
+  }
+
+  /* ── SCREENS ── */
+  .screen {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+    overflow: hidden;
+    display: none;
+  }
+
+  .screen.active { display: flex; }
+
+  /* ── BACKGROUNDS ── */
+  .bg-success {
+    background: linear-gradient(180deg,
+      #0d2e0d 0%,
+      #1a5c1a 30%,
+      #2e8b2e 65%,
+      #3aa83a 80%,
+      #3a7a1a 80%,
+      #2a5a10 100%
+    );
+  }
+
+  .bg-fail {
+    background: linear-gradient(180deg,
+      #0a0000 0%,
+      #2a0808 30%,
+      #5a1010 65%,
+      #7a1a1a 80%,
+      #6a2010 80%,
+      #4a1008 100%
+    );
+  }
+
+  /* ── TREES ── */
+  .tree-zone {
+    position: absolute;
+    bottom: 18%;
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+  }
+  .tree-zone.left  { left: 40px; }
+  .tree-zone.right { right: 40px; }
+
+  .tree { display: flex; flex-direction: column; align-items: center; }
+
+  .tc { width:0; height:0; border-left:28px solid transparent; border-right:28px solid transparent; border-bottom:42px solid #2e7d32; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.4)); }
+  .tc2{ width:0; height:0; border-left:20px solid transparent; border-right:20px solid transparent; border-bottom:30px solid #388e3c; margin-top:-20px; }
+  .tt { width:8px; height:18px; background:#5d4037; border-radius:2px; }
+
+  .tree-sm .tc  { border-left-width:18px; border-right-width:18px; border-bottom-width:28px; }
+  .tree-sm .tc2 { border-left-width:13px; border-right-width:13px; border-bottom-width:20px; margin-top:-13px; }
+  .tree-sm .tt  { width:6px; height:12px; }
+
+  .tree-fail .tc  { border-bottom-color: #3a0d0d; }
+  .tree-fail .tc2 { border-bottom-color: #4a1010; }
+
+  /* Ambient particles */
+  .particles {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
+
+  .particle {
+    position: absolute;
+    border-radius: 50%;
+    animation: float linear infinite;
+    opacity: 0;
+  }
+
+  @keyframes float {
+    0%   { transform: translateY(100vh) scale(0); opacity: 0; }
+    10%  { opacity: 0.6; }
+    90%  { opacity: 0.3; }
+    100% { transform: translateY(-10vh) scale(1); opacity: 0; }
+  }
+
+  /* ── MAIN LAYOUT ── */
+  .content {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-top: 60px;
+  }
+
+  /* ── CARD ── */
+  .card {
+    width: 520px;
+    background: rgba(0,0,0,0.55);
+    backdrop-filter: blur(20px);
+    border-radius: 24px;
+    padding: 36px 40px 32px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+    border: 1px solid rgba(255,255,255,0.08);
+    box-shadow: 0 32px 80px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.06);
+    animation: cardIn 0.6s cubic-bezier(0.34,1.56,0.64,1) both;
+  }
+
+  @keyframes cardIn {
+    from { transform: translateY(40px) scale(0.92); opacity: 0; }
+    to   { transform: translateY(0) scale(1); opacity: 1; }
+  }
+
+  /* ── BADGE ── */
+  .badge {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    padding: 5px 16px;
+    border-radius: 999px;
+  }
+  .badge-s { background: rgba(76,175,80,0.2); color: #81c784; border: 1px solid rgba(76,175,80,0.4); }
+  .badge-f { background: rgba(244,67,54,0.15); color: #e57373; border: 1px solid rgba(244,67,54,0.35); }
+
+  /* ── HEADLINE ── */
+  .headline {
+    font-family: 'Fredoka One', cursive;
+    font-size: 72px;
+    line-height: 1;
+    letter-spacing: 3px;
+    text-align: center;
+    animation: popIn 0.5s 0.15s cubic-bezier(0.34,1.56,0.64,1) both;
+  }
+
+  @keyframes popIn {
+    from { transform: scale(0.3) rotate(-5deg); opacity: 0; }
+    to   { transform: scale(1) rotate(0deg); opacity: 1; }
+  }
+
+  .hl-s { color: #f4c542; text-shadow: 0 6px 30px rgba(244,197,66,0.55), 0 0 60px rgba(244,197,66,0.2); }
+  .hl-f { color: #ff5252; text-shadow: 0 6px 30px rgba(255,82,82,0.55), 0 0 60px rgba(255,82,82,0.2); }
+
+  /* ── DIVIDER ── */
+  .div-line {
+    width: 50px; height: 2px; border-radius: 999px;
+    margin: -6px 0;
+  }
+  .div-s { background: linear-gradient(90deg, transparent, #f4c542, transparent); }
+  .div-f { background: linear-gradient(90deg, transparent, #ff5252, transparent); }
+
+  /* ── STARS ── */
+  .stars {
+    display: flex;
+    gap: 10px;
+    animation: fadeUp 0.4s 0.3s both;
+  }
+
+  .star { font-size: 36px; }
+  .star-on  { filter: drop-shadow(0 0 8px #f4c542); }
+  .star-off { filter: grayscale(1) brightness(0.3); }
+
+  /* ── FORMULA ── */
+  .formula {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 999px;
+    padding: 6px 18px;
+    font-size: 12px;
+    color: rgba(255,255,255,0.45);
+    font-family: 'Courier New', monospace;
+    letter-spacing: 0.5px;
+    animation: fadeUp 0.4s 0.35s both;
+  }
+
+  /* ── SCORE PANEL ── */
+  .score-panel {
+    width: 100%;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px;
+    padding: 16px 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    animation: fadeUp 0.4s 0.4s both;
+  }
+
+  .score-lbl {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.35);
+  }
+
+  .score-num {
+    font-family: 'Fredoka One', cursive;
+    font-size: 48px;
+    line-height: 1;
+  }
+  .score-num-s { color: #f4c542; }
+  .score-num-f { color: #ff5252; }
+
+  /* ── STATS ── */
+  .stats {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px;
+    overflow: hidden;
+    animation: fadeUp 0.4s 0.45s both;
+  }
+
+  .stat {
+    padding: 16px 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    border-right: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .stat:last-child { border-right: none; }
+
+  .stat-val {
+    font-family: 'Fredoka One', cursive;
+    font-size: 26px;
+    color: #f5f5f0;
+    line-height: 1;
+  }
+
+  .stat-val-s { color: #69f0ae; }
+  .stat-val-f { color: #ff6b6b; }
+
+  .stat-lbl {
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.35);
+    text-align: center;
+  }
+
+  /* ── BUTTONS ── */
+  .btn-row {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    animation: fadeUp 0.4s 0.5s both;
+  }
+
+  .btn {
+    width: 100%;
+    padding: 16px;
+    border-radius: 14px;
+    border: none;
+    cursor: pointer;
+    font-family: 'Nunito', sans-serif;
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    transition: transform 0.15s, box-shadow 0.15s, filter 0.15s;
+  }
+
+  .btn:hover { transform: translateY(-2px); filter: brightness(1.08); }
+  .btn:active{ transform: translateY(0); }
+
+  .btn-main-s {
+    background: linear-gradient(135deg, #66bb6a, #2e7d32);
+    color: #fff;
+    box-shadow: 0 8px 24px rgba(46,125,50,0.5);
+  }
+
+  .btn-main-f {
+    background: rgba(255,255,255,0.08);
+    color: #f5f5f0;
+    border: 1px solid rgba(255,255,255,0.15);
+  }
+
+  .btn-sec {
+    background: transparent;
+    color: rgba(255,255,255,0.5);
+    border: 1.5px solid rgba(255,255,255,0.15);
+  }
+
+  .btn-sec:hover { color: #fff; background: rgba(255,255,255,0.06); }
+
+  @keyframes fadeUp {
+    from { transform: translateY(14px); opacity: 0; }
+    to   { transform: translateY(0); opacity: 1; }
+  }
+
+  /* ── SIDE PANELS (laptop decorative) ── */
+  .side-info {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    animation: fadeUp 0.5s 0.6s both;
+  }
+
+  .side-info.left-panel  { left: 60px; align-items: flex-start; }
+  .side-info.right-panel { right: 60px; align-items: flex-end; }
+
+  .side-chip {
+    background: rgba(0,0,0,0.4);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 12px 18px;
+    min-width: 150px;
+  }
+
+  .chip-title {
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.35);
+    margin-bottom: 6px;
+  }
+
+  .chip-val {
+    font-family: 'Fredoka One', cursive;
+    font-size: 20px;
+    color: #f5f5f0;
+  }
+
+  .chip-sub {
+    font-size: 11px;
+    color: rgba(255,255,255,0.45);
+    margin-top: 2px;
+  }
+
+  /* Progress bar */
+  .progress-wrap {
+    background: rgba(0,0,0,0.4);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 12px 18px;
+    min-width: 150px;
+  }
+
+  .progress-title {
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.35);
+    margin-bottom: 8px;
+  }
+
+  .progress-bar-bg {
+    width: 100%;
+    height: 6px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 1s ease;
+  }
+
+  .fill-s { background: linear-gradient(90deg, #4caf50, #8bc34a); }
+  .fill-f { background: linear-gradient(90deg, #f44336, #ff7043); }
+
+  .progress-label {
+    font-size: 10px;
+    color: rgba(255,255,255,0.4);
+    margin-top: 5px;
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     SCREEN — LEVEL FAILED
+══════════════════════════════════════ -->
+<div class="screen active bg-fail" id="screen-fail">
+  <div class="particles" id="p-fail"></div>
+
+  <!-- Trees left (dark) -->
+  <div class="tree-zone left">
+    <div class="tree tree-sm tree-fail"><div class="tc2"></div><div class="tc"></div><div class="tt"></div></div>
+    <div class="tree tree-fail"><div class="tc2"></div><div class="tc"></div><div class="tt"></div></div>
+    <div class="tree tree-sm tree-fail"><div class="tc2"></div><div class="tc"></div><div class="tt"></div></div>
+  </div>
+
+  <!-- Trees right (dark) -->
+  <div class="tree-zone right">
+    <div class="tree tree-sm tree-fail"><div class="tc2"></div><div class="tc"></div><div class="tt"></div></div>
+    <div class="tree tree-fail"><div class="tc2"></div><div class="tc"></div><div class="tt"></div></div>
+    <div class="tree tree-sm tree-fail"><div class="tc2"></div><div class="tc"></div><div class="tt"></div></div>
+  </div>
+
+  <div class="content">
+    <!-- Left side info -->
+    <div class="side-info left-panel">
+      <div class="side-chip">
+        <div class="chip-title">Level</div>
+        <div class="chip-val">Level 1</div>
+        <div class="chip-sub">Physics Challenge</div>
+      </div>
+      <div class="side-chip">
+        <div class="chip-title">Vektor Input</div>
+        <div class="chip-val" style="color:#ff6b6b;">7.3 cm</div>
+        <div class="chip-sub">|v| = √(7²+2²) = 7.3</div>
+      </div>
+      <div class="progress-wrap">
+        <div class="progress-title">Percobaan</div>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill fill-f" style="width:60%;"></div>
+        </div>
+        <div class="progress-label">3 percobaan gagal</div>
+      </div>
+    </div>
+
+    <!-- Main card -->
+    <div class="card">
+      <span class="badge badge-f">Level Failed</span>
+      <div class="headline hl-f">MISS!</div>
+      <div class="div-line div-f"></div>
+
+      <div class="stars">
+        <span class="star star-off">⭐</span>
+        <span class="star star-off">⭐</span>
+        <span class="star star-off">⭐</span>
+      </div>
+
+      <div class="formula">|v| = √(vx² + vy²) &nbsp;|&nbsp; θ = arctan(vx / vy)</div>
+
+      <div class="score-panel">
+        <span class="score-lbl">Skor</span>
+        <span class="score-num score-num-f">210</span>
+      </div>
+
+      <div class="stats">
+        <div class="stat">
+          <span class="stat-val">7 cm</span>
+          <span class="stat-lbl">vx Input</span>
+        </div>
+        <div class="stat">
+          <span class="stat-val">2 cm</span>
+          <span class="stat-lbl">vy Input</span>
+        </div>
+        <div class="stat">
+          <span class="stat-val stat-val-f">+3.8 cm</span>
+          <span class="stat-lbl">Selisih</span>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-main-f">Coba Lagi ↺</button>
+        <button class="btn btn-sec">Kembali ke Menu</button>
+      </div>
+    </div>
+
+    <!-- Right side info -->
+    <div class="side-info right-panel">
+      <div class="side-chip" style="text-align:right;">
+        <div class="chip-title">Target Vektor</div>
+        <div class="chip-val" style="color:#ff6b6b;">vx=3, vy=4</div>
+        <div class="chip-sub">Kamu: vx=7, vy=2</div>
+      </div>
+      <div class="side-chip" style="text-align:right;">
+        <div class="chip-title">Tip</div>
+        <div class="chip-val" style="font-size:13px;font-family:'Nunito',sans-serif;font-weight:700;color:rgba(255,255,255,0.6);">Kurangi vx,<br>tambah vy</div>
+      </div>
+      <div class="progress-wrap" style="text-align:right;">
+        <div class="progress-title">Skor Kamu</div>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill fill-f" style="width:17%;"></div>
+        </div>
+        <div class="progress-label">210 / 1200 max</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+  function makeParticles(containerId, color, count) {
+    const c = document.getElementById(containerId);
+    if(c){
+      for (let i = 0; i < count; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        const size = Math.random() * 5 + 2;
+        p.style.cssText = `
+          width: ${size}px;
+          height: ${size}px;
+          background: ${color};
+          left: ${Math.random() * 100}%;
+          animation-duration: ${Math.random() * 6 + 5}s;
+          animation-delay: ${Math.random() * 6}s;
+        `;
+        c.appendChild(p);
+      }
+    }
+  }
+  makeParticles('p-fail', 'rgba(255,82,82,0.5)', 14);
+</script>
+</body>
+</html>

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VecShooT</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'modal-bg': '#404040',
+                        'input-bg': '#d9d9d9',
+                        'btn-bg': '#cf532b',
+                        'btn-hover': '#b54622'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .text-outline {
+            -webkit-text-stroke: 2px #8B4513;
+        }
+        @media (min-width: 768px) {
+            .text-outline {
+                -webkit-text-stroke: 3px #8B4513;
+            }
+        }
+    </style>
+</head>
+<body class="fixed inset-0 w-full h-full overflow-hidden font-sans bg-gray-900">
+
+    <section id="menu-utama" class="absolute inset-0 z-20 w-full h-full transition-all duration-500 ease-in-out opacity-100">
+        
+        <img src="assets/lapangan-HD.png" class="absolute inset-0 w-full h-full object-cover object-bottom -z-10 pointer-events-none" alt="Background Lapangan">
+             
+        <div class="relative z-10 flex flex-col items-center justify-center h-full w-full px-4 pt-10 pb-32">
+            
+            <h1 class="flex items-center justify-center mb-12 -mt-[100px] md:-mt-[300px] drop-shadow-xl text-5xl md:text-7xl lg:text-8xl font-black text-orange-500 text-outline tracking-wider">
+                <span>VecSho</span>
+                <img src="assets/football.png" alt="O" class="w-12 h-12 md:w-20 md:h-20 lg:w-24 lg:h-24 mx-1 lg:mx-2 object-contain -mt-2 transform hover:scale-110 transition-transform">
+                <span>T</span>
+            </h1>
+
+            <button id="btn-play" class="group relative mt-[100px] md:mt-[180px]">
+                <div class="absolute -inset-1 bg-gradient-to-r from-orange-600 to-orange-400 rounded-full blur opacity-70 group-hover:opacity-100 transition duration-300"></div>
+                <div class="relative flex items-center justify-center px-12 py-3 md:px-16 md:py-4 lg:px-20 lg:py-5 bg-gradient-to-b from-orange-400 to-orange-600 border-4 border-white/80 rounded-full shadow-2xl transform transition-all duration-200 group-hover:scale-105 active:scale-95">
+                    <span class="text-white text-3xl md:text-4xl lg:text-5xl font-bold tracking-widest drop-shadow-md">PLAY</span>
+                </div>
+            </button>
+        </div>
+
+        <div class="absolute bottom-[-20px] md:bottom-[-30px] left-1/2 transform -translate-x-1/2 z-20 pointer-events-none">
+            <img src="assets/football.png" alt="Bola Utama" class="w-32 h-32 md:w-48 md:h-48 lg:w-56 lg:h-56 object-contain drop-shadow-2xl">
+        </div>
+
+        <div class="absolute bottom-4 right-4 md:bottom-6 md:right-6 z-30">
+            <div class="bg-white/80 backdrop-blur-md px-6 py-2 rounded-xl border border-white/50 shadow-lg cursor-pointer hover:bg-white transition-colors duration-200">
+                <a href="#about" class="flex flex-col items-center justify-center text-green-800 hover:text-green-600">
+                    <svg class="w-6 h-6 md:w-8 md:h-8 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span class="font-bold text-sm md:text-base">About</span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <section id="menu-karakter" class="absolute inset-0 z-10 w-full h-full flex items-center justify-center transition-all duration-500 ease-in-out opacity-0 pointer-events-none">
+        
+        <img src="assets/BGLapang.png" class="absolute inset-0 w-full h-full object-cover object-bottom -z-10 pointer-events-none" alt="Background Karakter">
+             
+        <div class="relative z-10 bg-modal-bg rounded-[20px] p-10 w-[420px] shadow-2xl flex flex-col items-center">
+            
+            <h3 class="text-white text-2xl font-serif mb-5 tracking-wide">Siapa Namamu?</h3>
+            <input type="text" id="nama" class="w-[85%] bg-input-bg text-gray-800 rounded-full px-6 py-3 mb-8 outline-none focus:ring-4 focus:ring-blue-400/50 text-center placeholder-gray-500 text-lg transition-all" placeholder="Masukkan Nama">
+            
+            <h3 class="text-white text-2xl font-serif mb-5 tracking-wide">Pilih Karakter</h3>
+            
+            <ul class="flex justify-center gap-4 mb-8 w-full" id="daftar-karakter">
+                <li><img src="assets/karakter-1.png" class="w-[80px] h-[100px] object-contain cursor-pointer rounded-xl transition-all duration-200 hover:scale-105" alt="Karakter 1" data-id="karakter_1"></li>
+                <li><img src="assets/karakter-2.png" class="w-[80px] h-[100px] object-contain cursor-pointer rounded-xl transition-all duration-200 hover:scale-105" alt="Karakter 2" data-id="karakter_2"></li>
+                <li><img src="assets/karakter3.png" class="w-[80px] h-[100px] object-contain cursor-pointer rounded-xl transition-all duration-200 hover:scale-105" alt="Karakter 3" data-id="karakter_3"></li>
+            </ul>
+            
+            <button id="btn-simpan" class="bg-btn-bg hover:bg-btn-hover text-black font-semibold text-xl py-2 px-10 rounded-full transition-colors shadow-md">
+                Simpan
+            </button>
+        </div>
+    </section>
+
+    <script>
+        // Logika transisi dan simpan karakter tetep sama persis!
+        const btnPlay = document.getElementById('btn-play');
+        const menuUtama = document.getElementById('menu-utama');
+        const menuKarakter = document.getElementById('menu-karakter');
+
+        btnPlay.addEventListener('click', () => {
+            menuUtama.classList.remove('opacity-100');
+            menuUtama.classList.add('opacity-0', 'pointer-events-none', 'scale-110'); 
+
+            menuKarakter.classList.remove('opacity-0', 'pointer-events-none');
+            menuKarakter.classList.add('opacity-100');
+        });
+
+        const inputNama = document.getElementById('nama');
+        const daftarKarakter = document.querySelectorAll('#daftar-karakter img');
+        const btnSimpan = document.getElementById('btn-simpan');
+        let karakterTerpilih = null;
+
+        daftarKarakter.forEach((img) => {
+            img.addEventListener('click', function() {
+                daftarKarakter.forEach(el => el.classList.remove('ring-4', 'ring-green-400', 'bg-green-400/20'));
+                this.classList.add('ring-4', 'ring-green-400', 'bg-green-400/20');
+                karakterTerpilih = this.getAttribute('data-id'); 
+            });
+        });
+
+        btnSimpan.addEventListener('click', () => {
+            const namaUser = inputNama.value.trim();
+            if (!namaUser) {
+                alert("Silakan masukkan namamu dulu ya!");
+                inputNama.focus();
+                return;
+            }
+            if (!karakterTerpilih) {
+                alert("Pilih salah satu karakter jagoanmu!");
+                return;
+            }
+            console.log("Data Berhasil Disimpan:", { nama: namaUser, karakter: karakterTerpilih });
+            alert(`Mantap bang ${namaUser}! Karaktermu udah siap tempur.`);
+        });
+    </script>
+</body>
+</html>
