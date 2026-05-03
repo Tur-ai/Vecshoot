@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>VecShoot — Tentang Game</title>
+    <meta name="description"
+        content="Tentang VecShoot: game simulasi penalti sepak bola berbasis web yang menggabungkan konsep kalkulus vektor.">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <style>
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        html {
+            scroll-behavior: smooth
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            color: #f5f5f0;
+            min-height: 100vh;
+            background: url('assets/Background.png') center/cover no-repeat fixed;
+            background-color: #0d0d0d;
+            overflow-x: hidden
+        }
+
+        .bg-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.52);
+            z-index: 0
+        }
+
+        /* FLOATING BUTTONS & TRANSITIONS */
+        body {
+            opacity: 0;
+            animation: pageIn 0.5s ease 0.1s forwards;
+        }
+
+        @keyframes pageIn {
+            to {
+                opacity: 1;
+            }
+        }
+
+        .fab {
+            position: fixed;
+            bottom: 28px;
+            z-index: 999;
+            background: rgba(0, 0, 0, 0.55);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 999px;
+            padding: 12px 20px;
+            font-family: 'Nunito', sans-serif;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .fab-back {
+            left: 24px;
+            color: rgba(255, 255, 255, 0.8);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .fab-back:hover {
+            background: rgba(0, 0, 0, 0.75);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .fab-about {
+            right: 24px;
+            color: #69f0ae;
+            border-color: rgba(105, 240, 174, 0.3);
+            pointer-events: none;
+        }
+
+        /* LAYOUT */
+        .page-wrap {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            justify-content: center;
+            padding: 20px 20px 60px
+        }
+
+        .center-col {
+            max-width: 580px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 48px
+        }
+
+        /* SIDE PANELS */
+        .side-panel {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            gap: 14px
+        }
+
+        .side-panel.left {
+            left: 40px
+        }
+
+        .side-panel.right {
+            right: 40px;
+            text-align: right
+        }
+
+        .chip {
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 20px 24px;
+            min-width: 200px
+        }
+
+        .chip-title {
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.35);
+            margin-bottom: 6px
+        }
+
+        .chip-val {
+            font-family: 'Fredoka One', cursive;
+            font-size: 26px;
+            color: #f5f5f0
+        }
+
+        .chip-sub {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.45);
+            margin-top: 4px
+        }
+
+        @media(max-width:1100px) {
+            .side-panel {
+                display: none
+            }
+        }
+
+        /* CARD */
+        .card {
+            background: rgba(0, 0, 0, 0.55);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 32px 80px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+            width: 100%;
+            padding: 36px 32px;
+            animation: cardIn .6s cubic-bezier(.34, 1.56, .64, 1) both
+        }
+
+        /* STATS PANEL */
+        .stats-row {
+            display: flex;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            overflow: hidden
+        }
+
+        .stat {
+            flex: 1;
+            text-align: center;
+            padding: 16px 10px
+        }
+
+        .stat+.stat {
+            border-left: 1px solid rgba(255, 255, 255, 0.08)
+        }
+
+        .stat-val {
+            font-family: 'Fredoka One', cursive;
+            font-size: 26px
+        }
+
+        .stat-lbl {
+            font-size: 9px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.35);
+            margin-top: 4px
+        }
+
+        /* BUTTONS */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 14px;
+            font-family: 'Nunito', sans-serif;
+            font-weight: 800;
+            font-size: 15px;
+            padding: 14px 32px;
+            cursor: pointer;
+            transition: transform .2s, filter .2s;
+            border: none;
+            text-decoration: none
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.08)
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #66bb6a, #2e7d32);
+            color: #fff;
+            box-shadow: 0 6px 24px rgba(46, 125, 50, 0.5)
+        }
+
+        .btn-ghost {
+            background: transparent;
+            border: 1.5px solid rgba(255, 255, 255, 0.15);
+            color: rgba(255, 255, 255, 0.5)
+        }
+
+        /* BADGE */
+        .badge {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            padding: 6px 18px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.08);
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 8px
+        }
+
+        /* SECTION LABEL */
+        .section-label {
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.35);
+            margin-bottom: 6px
+        }
+
+        .thin-divider {
+            width: 50px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+            margin: 4px auto 18px
+        }
+
+        /* HEADLINE */
+        .headline {
+            font-family: 'Fredoka One', cursive;
+            font-size: 52px;
+            color: #f4c542;
+            text-shadow: 0 0 40px rgba(244, 197, 66, 0.35);
+            animation: popIn .5s cubic-bezier(.34, 1.56, .64, 1) .15s both;
+            text-align: center
+        }
+
+        .divider-gold {
+            width: 50px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #f4c542, transparent);
+            margin: 12px auto
+        }
+
+        .desc {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.65);
+            line-height: 1.75;
+            text-align: center;
+            max-width: 440px
+        }
+
+        /* VIZ PANEL */
+        .viz-panel {
+            margin: 16px auto;
+            display: block;
+            width: 100%;
+            max-width: 520px;
+            height: 200px;
+            background: rgba(0, 40, 0, 0.45);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+            position: relative
+        }
+
+        .viz-panel canvas {
+            display: block;
+            width: 100%;
+            max-width: 520px;
+            height: 200px;
+            margin: 0 auto
+        }
+
+        .formula-bar {
+            position: absolute;
+            bottom: 8px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            color: rgba(105, 240, 174, 0.8);
+            pointer-events: none
+        }
+
+        /* STEPS GRID */
+        .steps-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            width: 100%
+        }
+
+        .step-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 16px
+        }
+
+        .step-num {
+            font-family: 'Fredoka One', cursive;
+            font-size: 28px;
+            margin-bottom: 4px
+        }
+
+        .step-title {
+            font-weight: 800;
+            font-size: 15px;
+            margin-bottom: 6px
+        }
+
+        .step-desc {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.55);
+            line-height: 1.6
+        }
+
+        /* TOOLS GRID */
+        .tools-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+            width: 100%
+        }
+
+        .tool-chip {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 14px;
+            text-align: center
+        }
+
+        .tool-chip.placeholder {
+            border-style: dashed;
+            border-color: rgba(255, 255, 255, 0.12)
+        }
+
+        .tool-val {
+            font-family: 'Fredoka One', cursive;
+            font-size: 22px;
+            margin-bottom: 4px
+        }
+
+        .tool-lbl {
+            font-size: 9px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.35)
+        }
+
+        /* TEAM GRID */
+        .team-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            width: 100%
+        }
+
+        .member-card {
+            background: rgba(0, 0, 0, 0.55);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 32px 80px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+            overflow: hidden
+        }
+
+        .photo-area {
+            position: relative;
+            width: 100%;
+            padding-bottom: 133.33%;
+            background: rgba(255, 255, 255, 0.06)
+        }
+
+        .photo-inner {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center
+        }
+
+        .avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: 2px dashed rgba(255, 255, 255, 0.22);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: border-color .2s
+        }
+
+        .avatar:hover {
+            border-color: rgba(105, 240, 174, 0.55)
+        }
+
+        .avatar-initials {
+            font-family: 'Fredoka One', cursive;
+            font-size: 26px;
+            color: #f4c542
+        }
+
+        .upload-hint {
+            position: absolute;
+            bottom: 10px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 9px;
+            color: rgba(255, 255, 255, 0.3)
+        }
+
+        .member-info {
+            padding: 12px 14px
+        }
+
+        .member-name {
+            font-family: 'Fredoka One', cursive;
+            font-size: 17px;
+            color: #f5f5f0
+        }
+
+        .member-npm {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.32);
+            margin-top: 2px
+        }
+
+        /* PARTICLES */
+        .particle {
+            position: fixed;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: rgba(105, 240, 174, 0.4);
+            pointer-events: none;
+            z-index: 0
+        }
+
+        /* ANIMATIONS */
+        @keyframes cardIn {
+            from {
+                transform: translateY(40px) scale(.92);
+                opacity: 0
+            }
+
+            to {
+                transform: translateY(0) scale(1);
+                opacity: 1
+            }
+        }
+
+        @keyframes popIn {
+            from {
+                transform: scale(.3) rotate(-5deg);
+                opacity: 0
+            }
+
+            to {
+                transform: scale(1) rotate(0);
+                opacity: 1
+            }
+        }
+
+        @keyframes fadeUp {
+            from {
+                transform: translateY(14px);
+                opacity: 0
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1
+            }
+        }
+
+        @keyframes floatUp {
+            0% {
+                transform: translateY(0);
+                opacity: .7
+            }
+
+            100% {
+                transform: translateY(-100vh);
+                opacity: 0
+            }
+        }
+
+        .fade-up {
+            animation: fadeUp .4s ease both
+        }
+
+        .fd1 {
+            animation-delay: .1s
+        }
+
+        .fd2 {
+            animation-delay: .2s
+        }
+
+        .fd3 {
+            animation-delay: .3s
+        }
+
+        .fd4 {
+            animation-delay: .45s
+        }
+
+        .fd5 {
+            animation-delay: .6s
+        }
+
+        .fd6 {
+            animation-delay: .75s
+        }
+
+        .fd7 {
+            animation-delay: .9s
+        }
+
+        .fd8 {
+            animation-delay: 1.05s
+        }
+
+        .fd9 {
+            animation-delay: 1.2s
+        }
+
+        .fd10 {
+            animation-delay: 1.35s
+        }
+
+        .fd11 {
+            animation-delay: 1.5s
+        }
+
+        .fd12 {
+            animation-delay: 1.65s
+        }
+    </style>
+</head>
+
+<body>
+    <div class="bg-overlay"></div>
+
+    <!-- FLOATING BUTTONS -->
+    <button class="fab fab-back" onclick="navigateBack()">← Kembali</button>
+    <div class="fab fab-about">ℹ️ About</div>
+
+    <!-- SIDE PANELS -->
+    <div class="side-panel left">
+        <div class="chip">
+            <div class="chip-title">NAMA GAME</div>
+            <div class="chip-val" style="color:#f5f5f0">VecShoot</div>
+            <div class="chip-sub">Penalty · Vektor</div>
+        </div>
+        <div class="chip">
+            <div class="chip-title">KELOMPOK</div>
+            <div class="chip-val" style="color:#f4c542">5</div>
+            <div class="chip-sub">Informatika · Unsil</div>
+        </div>
+    </div>
+    <div class="side-panel right">
+        <div class="chip">
+            <div class="chip-title">KONSEP</div>
+            <div class="chip-val" style="font-size:20px">Kalkulus Vektor</div>
+            <div class="chip-sub">θ = arctan(vy/vx)</div>
+        </div>
+        <div class="chip">
+            <div class="chip-title">JENIS TUGAS</div>
+            <div class="chip-val">Projek UAS</div>
+            <div class="chip-sub">2025 / 2026</div>
+        </div>
+    </div>
+
+    <div class="page-wrap">
+        <div class="center-col">
+
+            <!-- SECTION 1: TENTANG GAME -->
+            <section class="card" style="display:flex;flex-direction:column;align-items:center;gap:14px">
+                <div class="badge">VECSHOOT</div>
+                <h1 class="headline">Tentang Game</h1>
+                <div class="divider-gold"></div>
+                <p class="desc fade-up fd1">VecShoot adalah game simulasi penalti sepak bola berbasis web yang dirancang
+                    sebagai media pembelajaran interaktif untuk mata kuliah Kalkulus. Dalam game ini, pemain tidak
+                    sekadar bermain — melainkan berpikir secara matematis. Setiap tendangan ditentukan oleh dua komponen
+                    vektor: vx untuk arah horizontal dan vy untuk arah vertikal. Dari keduanya, sistem secara otomatis
+                    menghitung sudut tendangan θ = arctan(vy/vx) dan kekuatan tendangan |v| = √(vx²+vy²), lalu
+                    mensimulasikan lintasan bola menuju gawang. Semakin tepat vektor yang dimasukkan, semakin besar
+                    peluang mencetak gol.</p>
+
+                <!-- Vector Visualization -->
+                <div class="viz-panel fade-up fd2">
+                    <canvas id="vecCanvas"></canvas>
+                    <div class="formula-bar">θ = arctan(vy/vx) · |v| = √(vx²+vy²)</div>
+                </div>
+            </section>
+
+            <!-- SECTION 2: CARA BERMAIN -->
+            <section style="width:100%;display:flex;flex-direction:column;align-items:center;gap:14px">
+                <div class="card"
+                    style="display:flex;flex-direction:column;align-items:center;gap:14px;padding:36px 32px">
+                    <div class="section-label">CARA BERMAIN</div>
+                    <div class="thin-divider"></div>
+                    <div class="steps-grid">
+                        <div class="step-card fade-up fd3">
+                            <div class="step-num" style="color:#f4c542">01</div>
+                            <div class="step-title">Input Vektor</div>
+                            <div class="step-desc">Masukkan nilai vx (horizontal) dan vy (vertikal) sebagai komponen
+                                vektor tendangan.</div>
+                        </div>
+                        <div class="step-card fade-up fd4">
+                            <div class="step-num" style="color:#69f0ae">02</div>
+                            <div class="step-title">Hitung Otomatis</div>
+                            <div class="step-desc">Sistem menghitung sudut θ = arctan(vy/vx) dan kekuatan |v| =
+                                √(vx²+vy²) secara real-time.</div>
+                        </div>
+                        <div class="step-card fade-up fd5">
+                            <div class="step-num" style="color:#ff6b6b">03</div>
+                            <div class="step-title">Tendang!</div>
+                            <div class="step-desc">Bola meluncur sesuai vektor yang dihitung. Arah dan kekuatan
+                                ditentukan sepenuhnya oleh inputmu.</div>
+                        </div>
+                        <div class="step-card fade-up fd6">
+                            <div class="step-num" style="color:#f4c542">04</div>
+                            <div class="step-title">Raih Bintang</div>
+                            <div class="step-desc">Semakin akurat vektormu, semakin banyak bintang yang kamu dapatkan.
+                                Maksimal 3 bintang per level.</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 3: TEKNOLOGI -->
+            <!-- TEMPLATE: teknologi-section -->
+            <section style="width:100%;display:flex;flex-direction:column;align-items:center;gap:14px">
+                <div class="card"
+                    style="display:flex;flex-direction:column;align-items:center;gap:14px;padding:36px 32px">
+                    <div class="section-label">TOOLS YANG DIGUNAKAN</div>
+                    <div class="thin-divider"></div>
+                    <div class="tools-grid">
+
+                        <div class="tool-chip fade-up fd4">
+                            <div class="tool-val">🌐</div>
+                            <div class="tool-lbl" style="font-size:12px;color:#f5f5f0;margin-bottom:2px">HTML</div>
+                            <div class="tool-lbl">Struktur</div>
+                        </div>
+
+                        <div class="tool-chip fade-up fd5">
+                            <div class="tool-val">🎨</div>
+                            <div class="tool-lbl" style="font-size:12px;color:#f5f5f0;margin-bottom:2px">CSS</div>
+                            <div class="tool-lbl">Tampilan</div>
+                        </div>
+
+                        <div class="tool-chip fade-up fd6">
+                            <div class="tool-val">⚡</div>
+                            <div class="tool-lbl" style="font-size:12px;color:#f5f5f0;margin-bottom:2px">JS</div>
+                            <div class="tool-lbl">Logika</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 4: TIM PENGEMBANG -->
+            <section style="width:100%;display:flex;flex-direction:column;align-items:center;gap:14px">
+                <div class="card"
+                    style="display:flex;flex-direction:column;align-items:center;gap:14px;padding:36px 32px">
+                    <div class="section-label">TIM PENGEMBANG</div>
+                    <div class="thin-divider"></div>
+                    <div class="team-grid">
+
+                        <!-- 1 -->
+                        <div class="member-card fade-up fd5">
+                            <div class="photo-area">
+                                <div class="photo-inner">
+                                    <div class="avatar"><span class="avatar-initials">IFF</span></div>
+                                    <div class="upload-hint">[ Upload Foto ]</div>
+                                </div>
+                            </div>
+                            <div class="member-info">
+                                <div class="member-name">Ikmal Fitra Fadilah</div>
+                                <div class="member-npm">257006111001</div>
+                            </div>
+                        </div>
+
+                        <!-- 2 -->
+                        <div class="member-card fade-up fd6">
+                            <div class="photo-area">
+                                <div class="photo-inner">
+                                    <div class="avatar"><span class="avatar-initials">SN</span></div>
+                                    <div class="upload-hint">[ Upload Foto ]</div>
+                                </div>
+                            </div>
+                            <div class="member-info">
+                                <div class="member-name">Shofa Nurjanah</div>
+                                <div class="member-npm">257006111005</div>
+                            </div>
+                        </div>
+
+                        <!-- 3 -->
+                        <div class="member-card fade-up fd7">
+                            <div class="photo-area">
+                                <div class="photo-inner">
+                                    <div class="avatar"><span class="avatar-initials">BS</span></div>
+                                    <div class="upload-hint">[ Upload Foto ]</div>
+                                </div>
+                            </div>
+                            <div class="member-info">
+                                <div class="member-name">Bagas Saputra</div>
+                                <div class="member-npm">257006111018</div>
+                            </div>
+                        </div>
+
+                        <!-- 4 -->
+                        <div class="member-card fade-up fd8">
+                            <div class="photo-area">
+                                <div class="photo-inner">
+                                    <div class="avatar"><span class="avatar-initials">AF</span></div>
+                                    <div class="upload-hint">[ Upload Foto ]</div>
+                                </div>
+                            </div>
+                            <div class="member-info">
+                                <div class="member-name">Azhar Faturahman</div>
+                                <div class="member-npm">257006111023</div>
+                            </div>
+                        </div>
+
+                        <!-- 5 -->
+                        <div class="member-card fade-up fd9">
+                            <div class="photo-area">
+                                <div class="photo-inner">
+                                    <div class="avatar"><span class="avatar-initials">FAV</span></div>
+                                    <div class="upload-hint">[ Upload Foto ]</div>
+                                </div>
+                            </div>
+                            <div class="member-info">
+                                <div class="member-name">Farrel Adelard Vicksian</div>
+                                <div class="member-npm">257006111044</div>
+                            </div>
+                        </div>
+
+                        <!-- 6 -->
+                        <div class="member-card fade-up fd10">
+                            <div class="photo-area">
+                                <div class="photo-inner">
+                                    <div class="avatar"><span class="avatar-initials">FAQ</span></div>
+                                    <div class="upload-hint">[ Upload Foto ]</div>
+                                </div>
+                            </div>
+                            <div class="member-info">
+                                <div class="member-name">Fazzry Asroful Qoih</div>
+                                <div class="member-npm">257006111053</div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </div>
+
+    <!-- EASTER EGG OVERLAY -->
+    <div id="easterEggOverlay"
+        style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:9999;align-items:center;justify-content:center;flex-direction:column;opacity:0;transition:opacity 0.3s ease;">
+        <h1
+            style="color:#f4c542;font-family:'Fredoka One',cursive;font-size:48px;margin-bottom:20px;text-align:center;">
+            KUCING KICAU MANIA! 🐱🐦</h1>
+        <!-- EDITABLE: Ganti src di bawah ini dengan file GIF Anda -->
+        <img src="cat-scuba.webp" alt="Kucing Kicau Mania"
+            style="max-width:90%;max-height:50vh;border-radius:16px;margin-bottom:24px;box-shadow:0 10px 30px rgba(0,0,0,0.5);">
+        <button class="btn btn-primary" onclick="closeEasterEgg()">Tutup</button>
+    </div>
+
+    <script>
+        /* ── Particles ── */
+        function makeParticles() { for (var i = 0; i < 12; i++) { var p = document.createElement('div'); p.className = 'particle'; p.style.left = Math.random() * 100 + 'vw'; p.style.bottom = '-10px'; p.style.width = p.style.height = (4 + Math.random() * 5) + 'px'; p.style.animation = 'floatUp ' + (4 + Math.random() * 6) + 's linear ' + (Math.random() * 4) + 's infinite'; document.body.appendChild(p) } }
+        makeParticles();
+
+        /* ── Navigation ── */
+        function navigateAway(url) {
+            document.body.style.transition = 'opacity 0.35s ease';
+            document.body.style.opacity = '0';
+            setTimeout(function () { window.location.href = url; }, 350);
+        }
+
+        function navigateBack() {
+            document.body.style.transition = 'opacity 0.35s ease';
+            document.body.style.opacity = '0';
+            setTimeout(function () {
+                if (window.history.length > 1) {
+                    window.history.back();
+                } else {
+                    window.location.href = 'index.html';
+                }
+            }, 350);
+        }
+
+        function goToAbout() {
+            navigateAway('about.html');
+        }
+
+        /* ── Easter Egg ── */
+        var badgeClickCount = 0;
+        var badgeEl = document.querySelector('.badge');
+        if (badgeEl) {
+            badgeEl.style.cursor = 'pointer';
+            badgeEl.style.userSelect = 'none';
+            badgeEl.addEventListener('click', function () {
+                badgeClickCount++;
+                if (badgeClickCount === 5) {
+                    badgeClickCount = 0;
+                    var overlay = document.getElementById('easterEggOverlay');
+                    if (overlay) {
+                        overlay.style.display = 'flex';
+                        setTimeout(function () { overlay.style.opacity = '1'; }, 10);
+                    }
+                }
+            });
+        }
+
+        function closeEasterEgg() {
+            var overlay = document.getElementById('easterEggOverlay');
+            if (overlay) {
+                overlay.style.opacity = '0';
+                setTimeout(function () { overlay.style.display = 'none'; }, 300);
+            }
+        }
+
+        /* ── Vector Canvas Animation ── */
+        (function () {
+            var panel = document.querySelector('.viz-panel');
+            var canvas = document.getElementById('vecCanvas');
+            var ctx = canvas.getContext('2d');
+            var dpr = window.devicePixelRatio || 1;
+            function resize() { var r = panel.getBoundingClientRect(); canvas.width = r.width * dpr; canvas.height = r.height * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0) }
+            resize();
+            new ResizeObserver(resize).observe(panel);
+
+            var scale = 120;
+            var startTime = null;
+
+            function draw(timestamp) {
+                if (!startTime) startTime = timestamp;
+                var t = timestamp - startTime;
+
+                var w = canvas.width / dpr, h = canvas.height / dpr;
+                ctx.clearRect(0, 0, w, h);
+
+                var angle = (50 + 20 * Math.sin(t * 0.0008)) * Math.PI / 180;
+                var ox = w * 0.38, oy = h * 0.65;
+                var vxLen = Math.cos(angle) * scale;
+                var vyLen = Math.sin(angle) * scale;
+                var ex = ox + vxLen;
+                var ey = oy;
+                var ty = oy - vyLen;
+                var rx = ox + Math.cos(angle) * scale;
+                var ry = oy - Math.sin(angle) * scale;
+
+                // vx component (blue dashed)
+                ctx.save();
+                ctx.strokeStyle = '#40c8ff'; ctx.lineWidth = 1.5; ctx.setLineDash([5, 4]);
+                ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(ex, ey); ctx.stroke();
+                ctx.setLineDash([]);
+                ctx.beginPath(); ctx.moveTo(ex, ey); ctx.lineTo(ex - 6, ey - 4); ctx.moveTo(ex, ey); ctx.lineTo(ex - 6, ey + 4); ctx.stroke();
+                ctx.fillStyle = '#40c8ff'; ctx.font = '12px Nunito, sans-serif';
+                ctx.fillText('vx →', ex + 8, ey + 14);
+                ctx.restore();
+
+                // vy component (red dashed)
+                ctx.save();
+                ctx.strokeStyle = '#ff6b6b'; ctx.lineWidth = 1.5; ctx.setLineDash([5, 4]);
+                ctx.beginPath(); ctx.moveTo(ex, ey); ctx.lineTo(ex, ty); ctx.stroke();
+                ctx.setLineDash([]);
+                ctx.beginPath(); ctx.moveTo(ex, ty); ctx.lineTo(ex - 4, ty + 6); ctx.moveTo(ex, ty); ctx.lineTo(ex + 4, ty + 6); ctx.stroke();
+                ctx.fillStyle = '#ff6b6b'; ctx.font = '12px Nunito, sans-serif';
+                ctx.fillText('↑ vy', ex + 8, (ey + ty) / 2);
+                ctx.restore();
+
+                // Resultant vector (gold solid)
+                ctx.save();
+                ctx.strokeStyle = '#f4c542'; ctx.lineWidth = 2; ctx.setLineDash([]);
+                ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(rx, ry); ctx.stroke();
+                var aLen = 10, aAng = 0.4;
+                var ra = Math.atan2(oy - ry, rx - ox);
+                ctx.beginPath();
+                ctx.moveTo(rx, ry);
+                ctx.lineTo(rx - aLen * Math.cos(ra - aAng), ry + aLen * Math.sin(ra - aAng));
+                ctx.moveTo(rx, ry);
+                ctx.lineTo(rx - aLen * Math.cos(ra + aAng), ry + aLen * Math.sin(ra + aAng));
+                ctx.stroke();
+                ctx.fillStyle = '#f4c542'; ctx.font = 'bold 13px Nunito, sans-serif';
+                ctx.fillText('v', rx + 8, ry);
+                ctx.restore();
+
+                // Angle arc — animates with vector, clockwise
+                var arcRadius = 32;
+                ctx.save();
+                ctx.strokeStyle = 'rgba(244,197,66,0.7)';
+                ctx.lineWidth = 1.5;
+                ctx.setLineDash([3, 3]);
+                ctx.beginPath();
+                ctx.arc(ox, oy, arcRadius, 0, -angle, false);
+                ctx.stroke();
+                ctx.setLineDash([]);
+                // theta label — position follows arc midpoint
+                var midAngle = -angle / 2;
+                var lblX = ox + (arcRadius + 12) * Math.cos(midAngle);
+                var lblY = oy + (arcRadius + 12) * Math.sin(midAngle);
+                ctx.fillStyle = '#f4c542';
+                ctx.font = 'italic 13px Nunito, sans-serif';
+                ctx.fillText('θ', lblX, lblY);
+                ctx.restore();
+
+                // Origin dot
+                ctx.beginPath();
+                ctx.arc(ox, oy, 5, 0, Math.PI * 2);
+                ctx.fillStyle = '#ffffff';
+                ctx.fill();
+
+                requestAnimationFrame(draw);
+            }
+
+            requestAnimationFrame(draw);
+        })();
+    </script>
+</body>
+
+</html>

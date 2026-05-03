@@ -3,12 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VecShooT</title>
+    <title>VecShooT - Full Game</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Fredoka+One&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    
     <script>
         tailwind.config = {
             theme: {
                 extend: {
+                    fontFamily: {
+                        sans: ['Nunito', 'sans-serif'],
+                        bangers: ['Bangers', 'cursive'],
+                        fredoka: ['Fredoka One', 'cursive']
+                    },
                     colors: {
                         'modal-bg': '#404040',
                         'input-bg': '#d9d9d9',
@@ -19,119 +26,791 @@
             }
         }
     </script>
+
     <style>
-        .text-outline {
-            -webkit-text-stroke: 2px #8B4513;
+        /* ── CUSTOM CSS ── */
+        body { margin: 0; padding: 0; overflow: hidden; background-color: #111827; }
+        .text-outline { -webkit-text-stroke: 2px #8B4513; }
+        @media (min-width: 768px) { .text-outline { -webkit-text-stroke: 3px #8B4513; } }
+
+        @keyframes pulse-glow {
+            0%,100% { box-shadow: 0 0 8px #22c55e, 0 0 20px #22c55e44; }
+            50% { box-shadow: 0 0 18px #22c55e, 0 0 40px #22c55e88; }
         }
-        @media (min-width: 768px) {
-            .text-outline {
-                -webkit-text-stroke: 3px #8B4513;
-            }
+        @keyframes float-up {
+            0%{transform:translate(-50%, -50%);opacity:1}
+            100%{transform:translate(-50%, calc(-50% - 60px));opacity:0}
         }
+        .glow-green { animation: pulse-glow 1.5s infinite; }
+        .float-up { animation: float-up 1.1s ease-out forwards; }
+        
+        .btn-kick {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            box-shadow: 0 4px 0 #15803d, 0 6px 20px #22c55e55;
+            transition: all .12s;
+        }
+        .btn-kick:active { transform: translateY(3px); box-shadow: 0 1px 0 #15803d; }
+        .btn-kick:disabled { background: linear-gradient(135deg,#555 0%,#333 100%); box-shadow: 0 4px 0 #222; cursor: not-allowed; }
+        .field-stripe { background: repeating-linear-gradient(180deg, #16a34a 0px, #16a34a 40px, #15803d 40px, #15803d 80px); }
+        .overlay-bg { background: rgba(0,0,0,0.88); backdrop-filter: blur(4px); }
+        input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
+
+        .screen-result { width: 100vw; height: 100vh; position: fixed; inset: 0; z-index: 50; display: none !important; align-items: center; justify-content: center; }
+        .screen-result.active { display: flex !important; }
+
+        .bg-success { background: rgba(13, 46, 13, 0.85); backdrop-filter: blur(8px); }
+        .bg-fail { background: rgba(42, 8, 8, 0.85); backdrop-filter: blur(8px); }
+
+        .particles { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+        .particle { position: absolute; border-radius: 50%; animation: float linear infinite; opacity: 0; }
+        @keyframes float { 0% { transform: translateY(100vh) scale(0); opacity: 0; } 10% { opacity: 0.6; } 90% { opacity: 0.3; } 100% { transform: translateY(-10vh) scale(1); opacity: 0; } }
+
+        .result-content { position: relative; z-index: 10; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .card { width: 100%; max-width: 520px; background: rgba(0,0,0,0.65); backdrop-filter: blur(20px); border-radius: 24px; padding: 28px 20px; display: flex; flex-direction: column; align-items: center; gap: 14px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 32px 80px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.06); animation: cardIn 0.6s cubic-bezier(0.34,1.56,0.64,1) both; }
+        @media (min-width: 768px) { .card { padding: 36px 40px 32px; gap: 18px; } }
+        @keyframes cardIn { from { transform: translateY(40px) scale(0.92); opacity: 0; } to  { transform: translateY(0) scale(1); opacity: 1; } }
+
+        .badge { font-size: 10px; font-weight: 800; letter-spacing: 4px; text-transform: uppercase; padding: 5px 16px; border-radius: 999px; }
+        .badge-s { background: rgba(76,175,80,0.2); color: #81c784; border: 1px solid rgba(76,175,80,0.4); }
+        .badge-f { background: rgba(244,67,54,0.15); color: #e57373; border: 1px solid rgba(244,67,54,0.35); }
+
+        .headline { font-family: 'Fredoka One', cursive; font-size: 48px; line-height: 1; letter-spacing: 3px; text-align: center; animation: popIn 0.5s 0.15s cubic-bezier(0.34,1.56,0.64,1) both; }
+        @media (min-width: 768px) { .headline { font-size: 72px; } }
+        @keyframes popIn { from { transform: scale(0.3) rotate(-5deg); opacity: 0; } to  { transform: scale(1) rotate(0deg); opacity: 1; } }
+        .hl-s { color: #f4c542; text-shadow: 0 6px 30px rgba(244,197,66,0.55), 0 0 60px rgba(244,197,66,0.2); }
+        .hl-f { color: #ff5252; text-shadow: 0 6px 30px rgba(255,82,82,0.55), 0 0 60px rgba(255,82,82,0.2); }
+
+        .div-line { width: 50px; height: 2px; border-radius: 999px; margin: -6px 0; }
+        .div-s { background: linear-gradient(90deg, transparent, #f4c542, transparent); }
+        .div-f { background: linear-gradient(90deg, transparent, #ff5252, transparent); }
+
+        .stars { display: flex; gap: 10px; animation: fadeUp 0.4s 0.3s both; }
+        .star { font-size: 32px; }
+        @media (min-width: 768px) { .star { font-size: 36px; } }
+        .star-on  { filter: drop-shadow(0 0 8px #f4c542); }
+        .star-off { filter: grayscale(1) brightness(0.3); }
+
+        .score-panel { width: 100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; animation: fadeUp 0.4s 0.4s both; }
+        @media (min-width: 768px) { .score-panel { padding: 16px 28px; } }
+        .score-lbl { font-size: 11px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; color: rgba(255,255,255,0.35); }
+        .score-num { font-family: 'Fredoka One', cursive; font-size: 36px; line-height: 1; }
+        @media (min-width: 768px) { .score-num { font-size: 48px; } }
+        .score-num-s { color: #f4c542; }
+        .score-num-f { color: #ff5252; }
+
+        .stats { width: 100%; display: grid; grid-template-columns: 1fr 1fr 1fr; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; overflow: hidden; animation: fadeUp 0.4s 0.45s both; }
+        .stat { padding: 12px 8px; display: flex; flex-direction: column; align-items: center; gap: 5px; border-right: 1px solid rgba(255,255,255,0.08); }
+        @media (min-width: 768px) { .stat { padding: 16px 12px; } }
+        .stat:last-child { border-right: none; }
+        .stat-val { font-family: 'Fredoka One', cursive; font-size: 20px; color: #f5f5f0; line-height: 1; }
+        @media (min-width: 768px) { .stat-val { font-size: 26px; } }
+        .stat-val-s { color: #69f0ae; }
+        .stat-val-f { color: #ff6b6b; }
+        .stat-lbl { font-size: 8px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: rgba(255,255,255,0.35); text-align: center; }
+        @media (min-width: 768px) { .stat-lbl { font-size: 9px; letter-spacing: 2px; } }
+
+        .btn-row { width: 100%; display: flex; flex-direction: column; gap: 8px; animation: fadeUp 0.4s 0.5s both; }
+        .result-btn { width: 100%; padding: 14px; border-radius: 12px; border: none; cursor: pointer; font-family: 'Nunito', sans-serif; font-size: 14px; font-weight: 800; letter-spacing: 0.5px; transition: transform 0.15s, box-shadow 0.15s, filter 0.15s; }
+        @media (min-width: 768px) { .result-btn { padding: 16px; font-size: 15px; border-radius: 14px; } }
+        .result-btn:hover { transform: translateY(-2px); filter: brightness(1.08); }
+        .result-btn:active{ transform: translateY(0); }
+        .btn-main-s { background: linear-gradient(135deg, #66bb6a, #2e7d32); color: #fff; box-shadow: 0 8px 24px rgba(46,125,50,0.5); }
+        .btn-main-f { background: rgba(255,255,255,0.08); color: #f5f5f0; border: 1px solid rgba(255,255,255,0.15); }
+        .btn-sec { background: transparent; color: rgba(255,255,255,0.5); border: 1.5px solid rgba(255,255,255,0.15); }
+        .btn-sec:hover { color: #fff; background: rgba(255,255,255,0.06); }
+
+        @keyframes fadeUp { from { transform: translateY(14px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        .side-info { position: absolute; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 12px; animation: fadeUp 0.5s 0.6s both; }
+        .side-info.left-panel  { left: 60px; align-items: flex-start; }
+        .side-info.right-panel { right: 60px; align-items: flex-end; }
+        .side-chip { background: rgba(0,0,0,0.4); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px 18px; min-width: 150px; }
+        .chip-title { font-size: 9px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.35); margin-bottom: 6px; }
+        .chip-val { font-family: 'Fredoka One', cursive; font-size: 20px; color: #f5f5f0; }
+        .chip-sub { font-size: 11px; color: rgba(255,255,255,0.45); margin-top: 2px; }
+
+        .page-section { display: none !important; width: 100%; height: 100vh; position: absolute; inset: 0; }
+        .page-section.active { display: flex !important; }
     </style>
 </head>
-<body class="fixed inset-0 w-full h-full overflow-hidden font-sans bg-gray-900">
+<body class="bg-gray-900 text-white">
 
-    <section id="menu-utama" class="absolute inset-0 z-20 w-full h-full transition-all duration-500 ease-in-out opacity-100">
-        
-        <img src="assets/lapangan-HD.png" class="absolute inset-0 w-full h-full object-cover object-bottom -z-10 pointer-events-none" alt="Background Lapangan">
-             
-        <div class="relative z-10 flex flex-col items-center justify-center h-full w-full px-4 pt-10 pb-32">
-            
-            <h1 class="flex items-center justify-center mb-12 -mt-[100px] md:-mt-[300px] drop-shadow-xl text-5xl md:text-7xl lg:text-8xl font-black text-orange-500 text-outline tracking-wider">
+    <img id="global-bg" src="assets/lapangan-HD.png" onerror="this.style.display='none'" class="fixed inset-0 w-full h-full object-cover object-bottom -z-20 opacity-50 pointer-events-none" alt="BG">
+
+    <section id="page-home" class="page-section active">
+        <div id="menu-utama" class="absolute inset-0 z-20 w-full h-full flex flex-col items-center justify-center transition-all duration-500 ease-in-out">
+            <h1 class="flex items-center justify-center mb-12 -mt-[100px] md:-mt-[200px] drop-shadow-xl text-5xl md:text-7xl lg:text-8xl font-black text-orange-500 text-outline tracking-wider font-bangers">
                 <span>VecSho</span>
-                <img src="assets/football.png" alt="O" class="w-12 h-12 md:w-20 md:h-20 lg:w-24 lg:h-24 mx-1 lg:mx-2 object-contain -mt-2 transform hover:scale-110 transition-transform">
+                <img src="assets/football.png" onerror="this.style.display='none'" class="w-12 h-12 md:w-20 md:h-20 lg:w-24 lg:h-24 mx-1 lg:mx-2 object-contain -mt-2 transform hover:scale-110 transition-transform">
                 <span>T</span>
             </h1>
-
-            <button id="btn-play" class="group relative mt-[100px] md:mt-[180px]">
+            <button id="btn-play" class="group relative mt-[50px] md:mt-[100px]">
                 <div class="absolute -inset-1 bg-gradient-to-r from-orange-600 to-orange-400 rounded-full blur opacity-70 group-hover:opacity-100 transition duration-300"></div>
-                <div class="relative flex items-center justify-center px-12 py-3 md:px-16 md:py-4 lg:px-20 lg:py-5 bg-gradient-to-b from-orange-400 to-orange-600 border-4 border-white/80 rounded-full shadow-2xl transform transition-all duration-200 group-hover:scale-105 active:scale-95">
-                    <span class="text-white text-3xl md:text-4xl lg:text-5xl font-bold tracking-widest drop-shadow-md">PLAY</span>
+                <div class="relative flex items-center justify-center px-12 py-3 md:px-16 md:py-4 bg-gradient-to-b from-orange-400 to-orange-600 border-4 border-white/80 rounded-full shadow-2xl transform transition-all duration-200 group-hover:scale-105 active:scale-95">
+                    <span class="text-white text-3xl md:text-4xl font-bold tracking-widest drop-shadow-md font-bangers">PLAY</span>
                 </div>
             </button>
+            
+            <a href="about.html" id="btn-about" class="absolute bottom-6 right-6 md:bottom-10 md:right-10 bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-500 hover:to-blue-700 text-white font-bangers text-xl md:text-2xl px-6 py-2 rounded-2xl shadow-xl border-2 border-blue-400/50 transition-all hover:scale-110 hover:-translate-y-1 z-30 flex items-center justify-center cursor-pointer">
+    ABOUT ℹ️
+</a>
         </div>
 
-        <div class="absolute bottom-[-20px] md:bottom-[-30px] left-1/2 transform -translate-x-1/2 z-20 pointer-events-none">
-            <img src="assets/football.png" alt="Bola Utama" class="w-32 h-32 md:w-48 md:h-48 lg:w-56 lg:h-56 object-contain drop-shadow-2xl">
-        </div>
-
-        <div class="absolute bottom-4 right-4 md:bottom-6 md:right-6 z-30">
-            <div class="bg-white/80 backdrop-blur-md px-6 py-2 rounded-xl border border-white/50 shadow-lg cursor-pointer hover:bg-white transition-colors duration-200">
-                <a href="#about" class="flex flex-col items-center justify-center text-green-800 hover:text-green-600">
-                    <svg class="w-6 h-6 md:w-8 md:h-8 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                    <span class="font-bold text-sm md:text-base">About</span>
-                </a>
+        <div id="menu-karakter" class="absolute inset-0 z-30 w-full h-full flex items-center justify-center transition-all duration-500 ease-in-out opacity-0 pointer-events-none">
+            <div class="relative bg-modal-bg rounded-[20px] p-8 w-[90%] max-w-[420px] shadow-2xl flex flex-col items-center border-2 border-gray-600">
+                <h3 class="text-white text-2xl font-serif mb-5 tracking-wide text-center">Siapa Namamu?</h3>
+                <input type="text" id="nama" class="w-[90%] bg-input-bg text-gray-800 rounded-full px-6 py-3 mb-8 outline-none focus:ring-4 focus:ring-blue-400/50 text-center placeholder-gray-500 text-lg font-bold transition-all" placeholder="Masukkan Nama">
+                <button id="btn-simpan" class="bg-btn-bg hover:bg-btn-hover text-white font-bangers tracking-widest text-2xl py-2 px-10 rounded-full transition-colors shadow-md w-full">
+                    SIMPAN & MAIN
+                </button>
             </div>
         </div>
     </section>
 
-    <section id="menu-karakter" class="absolute inset-0 z-10 w-full h-full flex items-center justify-center transition-all duration-500 ease-in-out opacity-0 pointer-events-none">
-        
-        <img src="assets/BGLapang.png" class="absolute inset-0 w-full h-full object-cover object-bottom -z-10 pointer-events-none" alt="Background Karakter">
-             
-        <div class="relative z-10 bg-modal-bg rounded-[20px] p-10 w-[420px] shadow-2xl flex flex-col items-center">
+    <section id="page-about" class="page-section flex-col items-center justify-center p-4 z-50">
+        <div class="absolute inset-0 bg-black/80 backdrop-blur-sm"></div>
+        <div class="relative w-full max-w-md bg-gray-900 border-2 border-blue-500 rounded-3xl p-8 text-center shadow-[0_0_40px_rgba(59,130,246,0.4)] transform transition-all">
+            <h2 class="font-bangers text-5xl md:text-6xl text-blue-400 mb-2 tracking-widest" style="text-shadow: 2px 2px 0 #000;">ABOUT GAME</h2>
+            <div class="w-16 h-1 bg-blue-500 mx-auto rounded-full mb-6"></div>
             
-            <h3 class="text-white text-2xl font-serif mb-5 tracking-wide">Siapa Namamu?</h3>
-            <input type="text" id="nama" class="w-[85%] bg-input-bg text-gray-800 rounded-full px-6 py-3 mb-8 outline-none focus:ring-4 focus:ring-blue-400/50 text-center placeholder-gray-500 text-lg transition-all" placeholder="Masukkan Nama">
-            
-            <h3 class="text-white text-2xl font-serif mb-5 tracking-wide">Pilih Karakter</h3>
-            
-            <ul class="flex justify-center gap-4 mb-8 w-full" id="daftar-karakter">
-                <li><img src="assets/karakter-1.png" class="w-[80px] h-[100px] object-contain cursor-pointer rounded-xl transition-all duration-200 hover:scale-105" alt="Karakter 1" data-id="karakter_1"></li>
-                <li><img src="assets/karakter-2.png" class="w-[80px] h-[100px] object-contain cursor-pointer rounded-xl transition-all duration-200 hover:scale-105" alt="Karakter 2" data-id="karakter_2"></li>
-                <li><img src="assets/karakter3.png" class="w-[80px] h-[100px] object-contain cursor-pointer rounded-xl transition-all duration-200 hover:scale-105" alt="Karakter 3" data-id="karakter_3"></li>
-            </ul>
-            
-            <button id="btn-simpan" class="bg-btn-bg hover:bg-btn-hover text-black font-semibold text-xl py-2 px-10 rounded-full transition-colors shadow-md">
-                Simpan
+            <p class="font-sans text-gray-300 text-sm md:text-base leading-relaxed mb-6">
+                <b>VecShooT</b> adalah game simulasi tendangan penalti berbasis vektor fisika. Hitung arah dan kekuatan tendangan untuk mencetak gol di berbagai level yang menantang!<br><br>
+                <span class="text-blue-300 font-bold">Creator:</span><br>
+                <span class="font-bangers text-2xl tracking-wider text-white drop-shadow-md">Azhar Faturahman</span><br>
+                <span class="text-xs text-gray-500 mt-2 block">Dibuat menggunakan:<br>HTML5 Canvas • Tailwind CSS • Vanilla JS</span>
+            </p>
+
+            <button id="btn-back-about" class="btn-kick font-bangers text-xl md:text-2xl tracking-widest text-white py-2 px-10 rounded-xl w-full" style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); box-shadow: 0 4px 0 #1e3a8a, 0 0 20px #3b82f666;">
+                KEMBALI KE MENU
             </button>
         </div>
     </section>
 
+    <section id="page-game" class="page-section flex-col items-center justify-center p-2 z-10 relative">
+        <div class="w-full max-w-2xl mb-3 flex items-start justify-between px-2">
+            <div class="flex flex-col gap-2">
+                <div>
+                    <h1 class="font-bangers text-3xl md:text-4xl text-green-400 tracking-widest leading-none drop-shadow-lg">PENALTY</h1>
+                    <h2 class="font-bangers text-lg md:text-xl text-yellow-400 tracking-widest -mt-1">SHOOTOUT</h2>
+                </div>
+                <div class="flex flex-col gap-1.5 mt-1">
+                    <div class="bg-black/60 backdrop-blur rounded-full px-3 py-1 text-[10px] md:text-xs font-bold tracking-wide flex gap-2 md:gap-3 whitespace-nowrap w-fit border border-gray-700/50" id="scoreDisp">
+                        <span class="text-gray-300">Player: <span id="dispPlayerName" class="text-white">Player</span></span>
+                        <span class="text-green-400 border-l border-gray-500 pl-2 md:pl-3">Skor: <span id="dispScore">0</span></span>
+                    </div>
+                    
+                    <div class="bg-blue-900/80 backdrop-blur border border-blue-400/50 rounded-full px-3 py-1 text-[10px] md:text-xs font-bold tracking-wide flex items-center gap-2 text-blue-100 hidden shadow-sm w-fit" id="windDisp">
+                        💨 <span class="text-blue-300">Angin:</span> <span id="windVal" class="text-white font-black">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex flex-col items-end gap-1">
+                <div id="lvlBadge" class="bg-yellow-400 text-gray-900 font-black text-xs md:text-sm px-3 py-1 rounded-full tracking-wide">LEVEL 1</div>
+                <div id="starsDisp" class="text-xl md:text-2xl tracking-wider text-yellow-400 drop-shadow-md">☆☆☆</div>
+            </div>
+        </div>
+
+        <div class="w-full max-w-2xl relative rounded-2xl overflow-hidden border-2 border-green-800 shadow-2xl" style="box-shadow:0 0 40px #22c55e33">
+            <div class="relative field-stripe" id="canvasWrap">
+                <canvas id="c" class="w-full"></canvas>
+                <div id="floatMsg" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-bangers text-4xl md:text-5xl pointer-events-none opacity-0 z-10" style="text-shadow:2px 2px 0 #000,0 0 20px currentColor"></div>
+            </div>
+
+            <div class="bg-gray-900 border-t-2 border-green-900 px-4 pt-4 pb-4">
+                <div class="grid grid-cols-2 gap-3 md:flex md:flex-wrap md:gap-4 items-end justify-between">
+                    <div class="col-span-1 md:flex-1">
+                        <label class="block text-[10px] md:text-xs text-gray-400 font-bold uppercase tracking-widest mb-2">Vektor A <span class="text-gray-500">(Kiri/Kanan)</span></label>
+                        <input type="number" id="vecA" min="-1000" max="1000" value="0" class="w-full bg-gray-800 text-green-400 font-black text-lg md:text-xl text-center py-2 rounded-lg border-2 border-gray-700 outline-none focus:border-green-500 transition-colors" placeholder="Cth: 150"/>
+                    </div>
+                    <div class="col-span-1 md:flex-1">
+                        <label class="block text-[10px] md:text-xs text-gray-400 font-bold uppercase tracking-widest mb-2">Vektor B <span class="text-gray-500">(Kekuatan)</span></label>
+                        <input type="number" id="vecB" min="0" max="100" value="0" class="w-full bg-gray-800 text-yellow-400 font-black text-lg md:text-xl text-center py-2 rounded-lg border-2 border-gray-700 outline-none focus:border-yellow-500 transition-colors" placeholder="Cth: 50"/>
+                    </div>
+                    <div class="col-span-2 md:col-span-1 flex flex-col gap-2 mt-2 md:mt-0 min-w-[120px]">
+                        <button id="kickBtn" class="btn-kick font-bangers text-xl md:text-2xl tracking-widest text-white py-2 md:py-3 px-6 rounded-xl w-full">TENDANG!</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="levelOverlay" class="absolute inset-0 overlay-bg z-30 flex flex-col items-center justify-center px-6 transition-opacity">
+            <div class="bg-gray-900 border-2 border-red-600 rounded-3xl p-6 md:p-8 max-w-sm w-full text-center transform scale-100 transition-transform duration-300 shadow-[0_0_30px_rgba(220,38,38,0.3)]">
+                <div id="olEmoji" class="text-5xl md:text-6xl mb-3">⚠️</div>
+                <h2 id="olTitle" class="font-bangers text-4xl md:text-5xl text-red-400 tracking-widest mb-2">LEVEL X</h2>
+                <p id="olDesc" class="text-gray-300 text-xs md:text-sm mb-6 leading-relaxed">...</p>
+                <div class="bg-gray-800 rounded-xl p-3 mb-6 text-[10px] md:text-xs text-gray-400 space-y-2 text-left">
+                    <div class="border-b border-gray-700 pb-2 text-red-300">🔥 <b>INPUT DI-RESET!</b> Hitung ualng dari 0!</div>
+                    <div>⭐⭐⭐ Kena <span class="text-green-400 font-bold">TARGET</span> (Lolos)</div>
+                    <div>⭐⭐ &nbsp;&nbsp;&nbsp;Masuk Gawang (Lolos)</div>
+                    <div>☆ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Ditepis / Meleset (Gagal)</div>
+                </div>
+                <button id="olBtn" class="btn-kick font-bangers text-2xl md:text-3xl tracking-widest text-white py-3 px-10 rounded-2xl w-full" style="background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); box-shadow: 0 4px 0 #7f1d1d, 0 0 20px #ef444466;">GASKEUN!</button>
+            </div>
+        </div>
+    </section>
+
+    <section id="page-success" class="screen-result bg-success">
+        <div class="particles" id="p-success"></div>
+        <div class="result-content">
+            <div class="side-info left-panel hidden md:flex">
+                <div class="side-chip"><div class="chip-title">Status</div><div class="chip-val" id="s-level">Level 1</div><div class="chip-sub text-green-300">Terselesaikan</div></div>
+                <div class="side-chip"><div class="chip-title">Pemain</div><div class="chip-val text-green-400" id="s-player">Player</div></div>
+            </div>
+            <div class="card">
+                <span class="badge badge-s">Level Complete</span>
+                <div class="headline hl-s">KEREN!</div>
+                <div class="div-line div-s"></div>
+                <div class="stars" id="s-stars"><span class="star star-on">⭐</span><span class="star star-on">⭐</span><span class="star star-off">⭐</span></div>
+                <div class="score-panel"><span class="score-lbl">Total Skor</span><span class="score-num score-num-s" id="s-score">0</span></div>
+                <div class="stats">
+                    <div class="stat"><span class="stat-val" id="s-target">0</span><span class="stat-lbl">Kena Target</span></div>
+                    <div class="stat"><span class="stat-val" id="s-goal">0</span><span class="stat-lbl">Gol Biasa</span></div>
+                    <div class="stat"><span class="stat-val stat-val-s" id="s-miss">0</span><span class="stat-lbl">Meleset</span></div>
+                </div>
+                <div class="btn-row">
+                    <button class="result-btn btn-main-s" onclick="nextLevel()">Lanjut Level Berikutnya →</button>
+                    <button class="result-btn btn-sec" onclick="goToMenu()">Kembali ke Menu Utama</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="page-fail" class="screen-result bg-fail">
+        <div class="particles" id="p-fail"></div>
+        <div class="result-content">
+            <div class="side-info left-panel hidden md:flex">
+                <div class="side-chip"><div class="chip-title">Status</div><div class="chip-val" id="f-level">Level 1</div><div class="chip-sub text-red-400">Gagal Memenuhi Target</div></div>
+                <div class="side-chip"><div class="chip-title">Pemain</div><div class="chip-val text-red-400" id="f-player">Player</div></div>
+            </div>
+            <div class="card">
+                <span class="badge badge-f">Level Failed</span>
+                <div class="headline hl-f">YAHH!</div>
+                <div class="div-line div-f"></div>
+                <div class="stars" id="f-stars"><span class="star star-off">⭐</span><span class="star star-off">⭐</span><span class="star star-off">⭐</span></div>
+                <div class="score-panel"><span class="score-lbl">Total Skor</span><span class="score-num score-num-f" id="f-score">0</span></div>
+                <div class="stats">
+                    <div class="stat"><span class="stat-val" id="f-target">0</span><span class="stat-lbl">Kena Target</span></div>
+                    <div class="stat"><span class="stat-val" id="f-goal">0</span><span class="stat-lbl">Gol Biasa</span></div>
+                    <div class="stat"><span class="stat-val stat-val-f" id="f-miss">1</span><span class="stat-lbl">Meleset</span></div>
+                </div>
+                <div class="btn-row">
+                    <button class="result-btn btn-main-f" onclick="retryLevel()">Coba Lagi ↺</button>
+                    <button class="result-btn btn-sec" onclick="goToMenu()">Kembali ke Menu Utama</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <script>
-        // Logika transisi dan simpan karakter tetep sama persis!
-        const btnPlay = document.getElementById('btn-play');
-        const menuUtama = document.getElementById('menu-utama');
-        const menuKarakter = document.getElementById('menu-karakter');
-
-        btnPlay.addEventListener('click', () => {
-            menuUtama.classList.remove('opacity-100');
-            menuUtama.classList.add('opacity-0', 'pointer-events-none', 'scale-110'); 
-
-            menuKarakter.classList.remove('opacity-0', 'pointer-events-none');
-            menuKarakter.classList.add('opacity-100');
-        });
-
-        const inputNama = document.getElementById('nama');
-        const daftarKarakter = document.querySelectorAll('#daftar-karakter img');
-        const btnSimpan = document.getElementById('btn-simpan');
-        let karakterTerpilih = null;
-
-        daftarKarakter.forEach((img) => {
-            img.addEventListener('click', function() {
-                daftarKarakter.forEach(el => el.classList.remove('ring-4', 'ring-green-400', 'bg-green-400/20'));
-                this.classList.add('ring-4', 'ring-green-400', 'bg-green-400/20');
-                karakterTerpilih = this.getAttribute('data-id'); 
+        // --- 1. PAGE NAVIGATION LOGIC ---
+        let playerName = "Player";
+        
+        function showPage(pageId) {
+            document.querySelectorAll('.page-section, .screen-result').forEach(el => {
+                el.classList.remove('active');
             });
+            document.getElementById(pageId).classList.add('active');
+        }
+
+        // Event listener ke menu utama
+        document.getElementById('btn-play').addEventListener('click', () => {
+            document.getElementById('menu-utama').classList.add('opacity-0', 'pointer-events-none', 'scale-110');
+            const mk = document.getElementById('menu-karakter');
+            mk.classList.remove('opacity-0', 'pointer-events-none');
+            mk.classList.add('opacity-100');
         });
 
-        btnSimpan.addEventListener('click', () => {
-            const namaUser = inputNama.value.trim();
-            if (!namaUser) {
-                alert("Silakan masukkan namamu dulu ya!");
-                inputNama.focus();
-                return;
-            }
-            if (!karakterTerpilih) {
-                alert("Pilih salah satu karakter jagoanmu!");
-                return;
-            }
-            console.log("Data Berhasil Disimpan:", { nama: namaUser, karakter: karakterTerpilih });
-            alert(`Mantap bang ${namaUser}! Karaktermu udah siap tempur.`);
+
+        // Event listener tombol kembali di page about
+        document.getElementById('btn-back-about').addEventListener('click', () => {
+            showPage('page-home');
         });
+
+        document.getElementById('btn-simpan').addEventListener('click', () => {
+            const input = document.getElementById('nama').value.trim();
+            if (!input) {
+                alert("Masukkan nama dulu bang!");
+                return;
+            }
+            playerName = input;
+            document.getElementById('dispPlayerName').textContent = playerName;
+            
+            showPage('page-game');
+            setupLevelVisuals(); 
+            showLevelOverlay();
+        });
+
+        function goToMenu() {
+            level = 0;
+            state = { score:0, kicks:0, targetCount:0, goalCount:0, missCount:0, done:false };
+            isPlaying = false;
+            
+            document.getElementById('menu-utama').classList.remove('opacity-0', 'pointer-events-none', 'scale-110');
+            document.getElementById('menu-karakter').classList.add('opacity-0', 'pointer-events-none');
+            document.getElementById('menu-karakter').classList.remove('opacity-100');
+            document.getElementById('nama').value = "";
+            
+            showPage('page-home');
+        }
+
+        // --- 2. GAME LOGIC ---
+        const canvas = document.getElementById('c');
+        const ctx = canvas.getContext('2d');
+        const wrap = document.getElementById('canvasWrap');
+
+        let W, H, GX, GY, GW, GH, BSTARTX, BSTARTY;
+        let isPlaying = false; 
+        let currentWind = 0; 
+
+        document.getElementById('vecA').addEventListener('input', () => { if(!isPlaying || !ball.flying) drawStaticFrame(); });
+        document.getElementById('vecB').addEventListener('input', () => { if(!isPlaying || !ball.flying) drawStaticFrame(); });
+
+        function resize() {
+            W = wrap.clientWidth;
+            H = Math.round(W * 0.62); 
+            canvas.width = W;
+            canvas.height = H;
+            GW = W * 0.38; GH = H * 0.22;
+            GX = (W - GW) / 2; GY = H * 0.06;
+            
+            BSTARTY = H * 0.8; 
+            if (!ball.kicked) { ball.y = BSTARTY; }
+        }
+
+        window.addEventListener('resize', () => { 
+            if(document.getElementById('page-game').classList.contains('active')) {
+                resize();
+                if(!isPlaying) drawStaticFrame(); 
+            }
+        });
+
+        const LEVELS = [
+            { n:1, name:'LEVEL 1', emoji:'⚽', desc:'Target jalan pelan & posisi diacak. Input selalu di-RESET ke 0!', targetMove:true, speed:1.5, randPos:true, wind:false, randBall:false, erratic:false, targetScale: 0.8 },
+            { n:2, name:'LEVEL 2', emoji:'🌀', desc:'Target MAKIN KECIL & ngebut! Ada Badai Angin mengganggu!', targetMove:true, speed:3.5, randPos:true, wind:true, randBall:false, erratic:false, targetScale: 0.6 },
+            { n:3, name:'LEVEL 3', emoji:'🔥', desc:'MODE NERAKA! Target Super Kecil Lincah, Posisi Tendang Acak, Angin Ekstrem!', targetMove:true, speed:6.0, randPos:true, wind:true, randBall:true, erratic:true, targetScale: 0.35 }
+        ];
+
+        let level = 0;
+        let state = { score:0, kicks:0, targetCount:0, goalCount:0, missCount:0, done:false };
+        let target = { x:0, y:0, w:0, h:0, dx:1 };
+        let ball = { x:0, y:0, vx:0, vy:0, r:10, kicked:false, flying:false, landed:false, trail:[] };
+        let targetFlash = 0;
+        let animId = null;
+
+        function showLevelOverlay() {
+            const lv = LEVELS[level];
+            document.getElementById('olEmoji').textContent = lv.emoji;
+            document.getElementById('olTitle').textContent = lv.name;
+            document.getElementById('olDesc').textContent = lv.desc;
+            
+            const overlay = document.getElementById('levelOverlay');
+            overlay.style.display = 'flex';
+            setTimeout(()=> overlay.style.opacity = '1', 50);
+        }
+
+        function setupLevelVisuals() {
+            const lv = LEVELS[level];
+            document.getElementById('lvlBadge').textContent = lv.name;
+            
+            document.getElementById('vecA').value = "";
+            document.getElementById('vecB').value = "";
+
+            resize(); 
+
+            if (lv.randBall) {
+                BSTARTX = (W / 2) + ((Math.random() - 0.5) * (W * 0.5)); 
+            } else {
+                BSTARTX = W / 2;
+            }
+            
+            target.w = GW * 0.3 * (lv.targetScale || 1); 
+            target.h = GH * 0.6 * (lv.targetScale || 1);
+            target.y = GY + GH * 0.08;
+            
+            if (lv.randPos) {
+                target.x = GX + (Math.random() * (GW - target.w));
+            } else {
+                target.x = GX + (GW - target.w) / 2;
+            }
+
+            target.dx = lv.speed * (Math.random() > 0.5 ? 1 : -1);
+            if (!target.dx && lv.targetMove) target.dx = lv.speed;
+
+            const windUI = document.getElementById('windDisp');
+            const windValUI = document.getElementById('windVal');
+            if (lv.wind) {
+                let strength = lv.n === 2 ? 6 : 12; 
+                currentWind = Math.floor(Math.random() * (strength * 2 + 1)) - strength; 
+                
+                windUI.classList.remove('hidden');
+                let dir = currentWind > 0 ? "➡️" : (currentWind < 0 ? "⬅️" : "Tenang");
+                windValUI.textContent = `${Math.abs(currentWind)} ${dir}`;
+                windValUI.className = currentWind === 0 ? "text-gray-300 font-black" : (Math.abs(currentWind) >= 8 ? "text-red-400 font-black animate-pulse" : "text-yellow-300 font-black");
+            } else {
+                currentWind = 0;
+                windUI.classList.add('hidden');
+            }
+            
+            state.score = 0; state.kicks = 0; 
+            state.targetCount = 0; state.goalCount = 0; state.missCount = 0;
+            state.done = false;
+            isPlaying = false;
+            
+            document.getElementById('starsDisp').textContent = '☆☆☆';
+            resetBall();
+            updateScore();
+            
+            drawStaticFrame(); 
+        }
+
+        function drawStaticFrame() {
+            ctx.clearRect(0, 0, W, H);
+            drawField(); drawGoal(); drawTarget(); drawGoalkeeper(); drawShooter(); drawAimLine(); drawBall();
+        }
+
+        document.getElementById('olBtn').addEventListener('click', () => {
+            const overlay = document.getElementById('levelOverlay');
+            overlay.style.opacity = '0';
+            setTimeout(() => { overlay.style.display = 'none'; }, 300);
+            
+            isPlaying = true;
+            if (animId) cancelAnimationFrame(animId);
+            animId = requestAnimationFrame(loop);
+        });
+
+        function resetBall() {
+            ball.x = BSTARTX; ball.y = BSTARTY;
+            ball.r = W * 0.018;
+            ball.vx = 0; ball.vy = 0;
+            ball.kicked = false; ball.flying = false; ball.landed = false;
+            ball.trail = [];
+            document.getElementById('kickBtn').disabled = false;
+        }
+
+        function updateScore() {
+            document.getElementById('dispScore').textContent = state.score * 100;
+            let stars = 0;
+            if(state.score >= 2) stars = 3;
+            else if(state.score >= 1) stars = 2;
+            document.getElementById('starsDisp').textContent = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
+        }
+
+        function showFloatMsg(txt, color) {
+            const el = document.getElementById('floatMsg');
+            el.textContent = txt;
+            el.style.color = color;
+            el.style.opacity = '1';
+            el.style.animation = 'none';
+            void el.offsetWidth;
+            el.style.animation = 'float-up 1.1s ease-out forwards';
+        }
+
+        document.getElementById('kickBtn').addEventListener('click', () => {
+            if (ball.flying || state.done || !isPlaying) return;
+            
+            const rawA = document.getElementById('vecA').value;
+            const rawB = document.getElementById('vecB').value;
+            
+            if (rawA === '' || isNaN(rawA) || rawB === '' || isNaN(rawB)) {
+                alert("⚠️ Error: Input tidak valid! Jangan masukin huruf atau dibiarin kosong ya bang.");
+                return;
+            }
+
+            let a = parseFloat(rawA);
+            let b = parseFloat(rawB);
+            
+            if (a < -1000 || a > 1000) {
+                alert("⚠️ Error: Vektor A (Kiri/Kanan) batasnya -1000 sampai 1000 aja bang!");
+                return;
+            }
+            if (b < 0 || b > 100) {
+                alert("⚠️ Error: Vektor B (Kekuatan) harus antara 0 sampai 100. Nggak bisa minus!");
+                return;
+            }
+            
+            if (b < 10) b = 10;
+            
+            const power = b / 100; 
+            const dir = a / 100;   
+            
+            const speed = (H * 0.015) + (H * 0.02 * power); 
+            
+            ball.vx = dir * speed * 0.8; 
+            ball.vy = -speed; 
+            
+            ball.kicked = true; ball.flying = true; ball.landed = false;
+            ball.trail = [];
+            document.getElementById('kickBtn').disabled = true;
+            state.kicks++;
+            updateScore();
+        });
+
+        function updatePhysics() {
+            const lv = LEVELS[level];
+            if (lv.targetMove) {
+                target.x += target.dx;
+                if (target.x < GX) {
+                    target.dx = Math.abs(target.dx);
+                    target.x = GX;
+                }
+                if (target.x + target.w > GX + GW) {
+                    target.dx = -Math.abs(target.dx);
+                    target.x = GX + GW - target.w;
+                }
+
+                if (lv.erratic && Math.random() < 0.05) { 
+                    target.dx *= -1;
+                }
+            }
+            
+            if (!ball.flying) return;
+            
+            ball.trail.push({x: ball.x, y: ball.y});
+            if (ball.trail.length > 14) ball.trail.shift();
+            
+            ball.vx += currentWind * 0.06;
+
+            ball.x += ball.vx;
+            ball.y += ball.vy;
+            ball.vy *= 0.985; 
+            ball.vx *= 0.985; 
+
+            const kx = W/2 + (target.x + target.w/2 - GX - GW/2) * 0.55;
+            const ky = GY + GH * 0.25;
+            const gkHitbox = { left: kx - 30, right: kx + 30, top: ky - 10, bottom: ky + 40 };
+
+            if (ball.y <= gkHitbox.bottom && ball.y >= gkHitbox.top && ball.x >= gkHitbox.left && ball.x <= gkHitbox.right && !ball.landed) {
+                ball.landed = true; ball.flying = false;
+                showFloatMsg('✋ DITEPIS!', '#f97316'); 
+                state.missCount++;
+                processKickResult(); return; 
+            }
+
+            const targetDepth = target.y + target.h;
+            if (ball.y <= targetDepth && ball.y >= GY && ball.x >= GX && ball.x <= GX + GW && !ball.landed) {
+                ball.landed = true; ball.flying = false; 
+                const hitTarget = ball.x >= target.x && ball.x <= target.x + target.w;
+                
+                if (hitTarget) {
+                    state.score += 2; state.targetCount++; targetFlash = 25;
+                    showFloatMsg('⭐ TARGET!', '#fbbf24');
+                } else {
+                    state.score += 1; state.goalCount++;
+                    showFloatMsg('✅ GOL!', '#4ade80');
+                }
+                processKickResult(); return;
+            }
+            
+            if (ball.y < GY - 20 || ball.y > H + 30 || (ball.y <= targetDepth && (ball.x < GX || ball.x > GX + GW))) {
+                if (ball.flying && !ball.landed) {
+                    ball.flying = false; ball.landed = true;
+                    showFloatMsg('❌ MELESET!', '#f87171');
+                    state.missCount++;
+                    processKickResult();
+                }
+            }
+        }
+
+        function processKickResult() {
+            updateScore(); 
+            state.done = true;
+            setTimeout(endLevelHandler, 1000); 
+        }
+
+        function endLevelHandler() {
+            isPlaying = false; 
+            
+            let finalStars = 0;
+            if(state.score >= 2) finalStars = 3;
+            else if(state.score >= 1) finalStars = 2;
+
+            if (finalStars > 0) {
+                document.getElementById('s-level').textContent = LEVELS[level].name;
+                document.getElementById('s-player').textContent = playerName;
+                document.getElementById('s-score').textContent = (state.score * 100);
+                document.getElementById('s-target').textContent = state.targetCount;
+                document.getElementById('s-goal').textContent = state.goalCount;
+                document.getElementById('s-miss').textContent = state.missCount;
+                
+                let sHtml = '';
+                for(let i=0; i<3; i++) sHtml += `<span class="star ${i < finalStars ? 'star-on' : 'star-off'}">⭐</span>`;
+                document.getElementById('s-stars').innerHTML = sHtml;
+
+                showPage('page-success');
+                makeParticles('p-success', 'rgba(244,197,66,0.7)', 15);
+            } else {
+                document.getElementById('f-level').textContent = LEVELS[level].name;
+                document.getElementById('f-player').textContent = playerName;
+                document.getElementById('f-score').textContent = (state.score * 100);
+                document.getElementById('f-target').textContent = state.targetCount;
+                document.getElementById('f-goal').textContent = state.goalCount;
+                document.getElementById('f-miss').textContent = state.missCount;
+
+                showPage('page-fail');
+                makeParticles('p-fail', 'rgba(255,82,82,0.5)', 15);
+            }
+        }
+
+        function nextLevel() {
+            if(level < LEVELS.length - 1) {
+                level++;
+                showPage('page-game');
+                setupLevelVisuals();
+                showLevelOverlay();
+            } else {
+                alert("Selamat Bang! Semua Level Selesai. Kamu Juara sejati!");
+                goToMenu();
+            }
+        }
+
+        function retryLevel() {
+            showPage('page-game');
+            setupLevelVisuals();
+            showLevelOverlay();
+        }
+
+        function loop() {
+            ctx.clearRect(0, 0, W, H);
+            drawField(); drawGoal(); drawTarget(); drawGoalkeeper(); drawShooter(); drawAimLine(); drawBall();
+            
+            if(isPlaying) {
+                updatePhysics();
+            }
+            animId = requestAnimationFrame(loop);
+        }
+
+        function drawField() {
+            ctx.strokeStyle = 'rgba(255,255,255,0.55)'; ctx.lineWidth = 2;
+            const pw = GW * 1.35, ph = GH * 1.7, px = (W - pw)/2, py = GY + GH; ctx.strokeRect(px, py, pw, ph);
+            const bw = GW * 0.72, bh = GH * 0.88, bx = (W - bw)/2, by = GY + GH; ctx.strokeRect(bx, by, bw, bh);
+        }
+
+        function drawGoal() {
+            ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.fillRect(GX-6, GY-6, GW+12, GH+10);
+            ctx.fillStyle = 'rgba(200,220,255,0.12)'; ctx.fillRect(GX, GY, GW, GH);
+            ctx.strokeStyle = 'rgba(255,255,255,0.18)'; ctx.lineWidth = 0.8;
+            for(let i=1;i<10;i++){ ctx.beginPath(); ctx.moveTo(GX+i*(GW/10),GY); ctx.lineTo(GX+i*(GW/10),GY+GH); ctx.stroke(); }
+            for(let i=1;i<6;i++){ ctx.beginPath(); ctx.moveTo(GX,GY+i*(GH/6)); ctx.lineTo(GX+GW,GY+i*(GH/6)); ctx.stroke(); }
+            ctx.strokeStyle = '#f0f0f0'; ctx.lineWidth = 5; ctx.strokeRect(GX, GY, GW, GH);
+            ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(GX+2,GY+2); ctx.lineTo(GX+GW-2,GY+2); ctx.stroke();
+        }
+
+        function drawTarget() {
+            if (targetFlash > 0) { ctx.fillStyle = `rgba(255,235,60,${0.6+0.4*Math.sin(targetFlash*0.8)})`; ctx.strokeStyle = '#fff'; } 
+            else { ctx.fillStyle = 'rgba(34,197,94,0.8)'; ctx.strokeStyle = '#16a34a'; }
+            ctx.lineWidth = 2.5; ctx.beginPath(); ctx.roundRect(target.x, target.y, target.w, target.h, 4); ctx.fill(); ctx.stroke();
+            ctx.fillStyle = targetFlash > 0 ? '#000' : 'rgba(255,255,255,0.95)'; ctx.font = `bold ${Math.round(target.h*0.25)}px Bangers, cursive`;
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('TARGET', target.x + target.w/2, target.y + target.h/2);
+            ctx.font = `${Math.round(target.h*0.22)}px serif`; ctx.fillText('⭐', target.x + target.w/2, target.y + target.h*0.75);
+            if (targetFlash > 0) targetFlash--;
+        }
+
+        function drawAimLine() {
+            if (ball.flying || ball.landed || state.done) return; 
+
+            const rawA = document.getElementById('vecA').value;
+            const rawB = document.getElementById('vecB').value;
+            
+            let a = parseFloat(rawA) || 0;
+            let b = parseFloat(rawB) || 0;
+            
+            if (b < 0) b = 0; if (b > 100) b = 100;
+            if (a < -1000) a = -1000; if (a > 1000) a = 1000;
+            if (b < 10 && b > 0) b = 10; 
+            
+            if (b === 0 && a === 0) return; 
+
+            const power = b / 100;
+            const dir = a / 100;
+            const speed = (H * 0.015) + (H * 0.02 * power);
+            
+            let px = dir * speed * 0.8;
+            let py = -speed;
+            px += currentWind * 0.06; 
+
+            ctx.beginPath();
+            ctx.setLineDash([6, 6]); 
+            ctx.moveTo(ball.x, ball.y);
+            
+            const lineLength = 12; 
+            ctx.lineTo(ball.x + (px * lineLength), ball.y + (py * lineLength));
+            
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+            ctx.lineWidth = 2.5;
+            ctx.stroke();
+            ctx.setLineDash([]); 
+            
+            ctx.beginPath();
+            ctx.arc(ball.x + (px * lineLength), ball.y + (py * lineLength), 4, 0, Math.PI*2);
+            ctx.fillStyle = 'rgba(255, 200, 0, 0.9)';
+            ctx.fill();
+        }
+
+        function drawBall() {
+            for (let i = 0; i < ball.trail.length; i++) {
+                const t = ball.trail[i]; const alpha = (i / ball.trail.length) * 0.4; const r = ball.r * (i / ball.trail.length) * 0.7;
+                ctx.beginPath(); ctx.arc(t.x, t.y, r, 0, Math.PI*2); ctx.fillStyle = `rgba(255,255,255,${alpha})`; ctx.fill();
+            }
+            const dist = (BSTARTY - ball.y) / (BSTARTY - GY); const shadowA = 0.35 * (1 - dist * 0.8);
+            ctx.beginPath(); ctx.ellipse(ball.x, BSTARTY - 2, ball.r * 1.2, ball.r * 0.35, 0, 0, Math.PI*2); ctx.fillStyle = `rgba(0,0,0,${shadowA})`; ctx.fill();
+            const scale = 0.4 + 0.6 * (1 - dist * 0.55); const br = ball.r * scale;
+            const grad = ctx.createRadialGradient(ball.x - br*0.3, ball.y - br*0.3, br*0.05, ball.x, ball.y, br);
+            grad.addColorStop(0, '#ffffff'); grad.addColorStop(0.4, '#e8e8e8'); grad.addColorStop(1, '#cccccc');
+            ctx.beginPath(); ctx.arc(ball.x, ball.y, br, 0, Math.PI*2); ctx.fillStyle = grad; ctx.fill(); ctx.strokeStyle = '#888'; ctx.lineWidth = 1;ctx.stroke();
+            ctx.fillStyle = '#1a1a1a'; const spin = performance.now() * 0.004;
+            for (let i = 0; i < 5; i++) {
+                const a = i*(Math.PI*2/5) + spin; const px2 = ball.x + br*0.42*Math.cos(a); const py2 = ball.y + br*0.42*Math.sin(a);
+                ctx.beginPath(); ctx.arc(px2, py2, br*0.18, 0, Math.PI*2); ctx.fill();
+            }
+            ctx.beginPath(); ctx.arc(ball.x, ball.y, br*0.2, 0, Math.PI*2); ctx.fill();
+        }
+
+        function drawGoalkeeper() {
+            const kx = W/2 + (target.x + target.w/2 - GX - GW/2) * 0.55; const ky = GY + GH * 0.25;
+            ctx.fillStyle = '#dc2626'; ctx.beginPath(); ctx.ellipse(kx, ky+12, 9, 13, 0, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = '#fff'; ctx.font = `bold 8px sans-serif`; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('1', kx, ky+13);
+            ctx.fillStyle = '#fde68a'; ctx.beginPath(); ctx.arc(kx, ky, 10, 0, Math.PI*2); ctx.fill(); ctx.strokeStyle='#d97706'; ctx.lineWidth=1.5; ctx.stroke();
+            ctx.fillStyle = '#7f1d1d'; ctx.beginPath(); ctx.arc(kx, ky-3, 8.5, Math.PI, 0); ctx.fill();
+            ctx.fillStyle = '#dc2626'; ctx.beginPath(); ctx.moveTo(kx-9,ky+3); ctx.lineTo(kx-20,ky+7); ctx.lineTo(kx-13,ky+14); ctx.closePath(); ctx.fill();
+            ctx.beginPath(); ctx.moveTo(kx+9,ky+3); ctx.lineTo(kx+20,ky+7); ctx.lineTo(kx+13,ky+14); ctx.closePath(); ctx.fill();
+            ctx.fillStyle='#fbbf24'; ctx.beginPath(); ctx.arc(kx-20,ky+7,4,0,Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(kx+20,ky+7,4,0,Math.PI*2); ctx.fill();
+            ctx.fillStyle='#1e3a5f'; ctx.fillRect(kx-7, ky+24, 6, 14); ctx.fillRect(kx+1, ky+24, 6, 14);
+            ctx.fillStyle='#111'; ctx.beginPath(); ctx.ellipse(kx-4, ky+39, 6,4,0,0,Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.ellipse(kx+4, ky+39, 6,4,0,0,Math.PI*2); ctx.fill();
+        }
+
+        function drawShooter() {
+            const sx = BSTARTX, sy = BSTARTY + ball.r * 2.2;
+            ctx.beginPath(); ctx.ellipse(sx, sy+40, 12, 4, 0, 0, Math.PI*2); ctx.fillStyle='rgba(0,0,0,0.3)'; ctx.fill();
+            ctx.fillStyle='#1e40af'; ctx.fillRect(sx-8,sy+22,6,16); ctx.fillRect(sx+2,sy+22,6,16);
+            ctx.fillStyle='#111'; ctx.beginPath(); ctx.ellipse(sx-5,sy+39,6,4,0,0,Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.ellipse(sx+5,sy+39,6,4,0,0,Math.PI*2); ctx.fill();
+            ctx.fillStyle='#2563eb'; ctx.beginPath(); ctx.ellipse(sx, sy+12, 10, 14, 0, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle='#fff'; ctx.font='bold 9px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('10', sx, sy+13);
+            ctx.fillStyle='#fbbf24'; ctx.beginPath(); ctx.arc(sx, sy-1, 10, 0, Math.PI*2); ctx.fill(); ctx.strokeStyle='#d97706'; ctx.lineWidth=1.5; ctx.stroke();
+            ctx.fillStyle='#92400e'; ctx.beginPath(); ctx.arc(sx, sy-4, 9, Math.PI, 0); ctx.fill();
+            ctx.fillStyle='#2563eb'; ctx.beginPath(); ctx.moveTo(sx-9,sy+4); ctx.lineTo(sx-18,sy+14); ctx.lineTo(sx-11,sy+20); ctx.closePath(); ctx.fill();
+            ctx.beginPath(); ctx.moveTo(sx+9,sy+4); ctx.lineTo(sx+18,sy+14); ctx.lineTo(sx+11,sy+20); ctx.closePath(); ctx.fill();
+        }
+
+        function makeParticles(containerId, color, count) {
+            const c = document.getElementById(containerId);
+            if(c){
+                c.innerHTML = '';
+                for (let i = 0; i < count; i++) {
+                    const p = document.createElement('div');
+                    p.className = 'particle';
+                    const size = Math.random() * 5 + 2;
+                    p.style.cssText = `
+                        width: ${size}px; height: ${size}px; background: ${color};
+                        left: ${Math.random() * 100}%;
+                        animation-duration: ${Math.random() * 6 + 5}s;
+                        animation-delay: ${Math.random() * 6}s;
+                    `;
+                    c.appendChild(p);
+                }
+            }
+        }
     </script>
 </body>
 </html>
