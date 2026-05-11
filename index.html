@@ -303,10 +303,6 @@
         </div>
     </section>
 
-    <!-- INI KODE MUSIKNYA -->
-    <!-- Jika nama file lagumu berbeda, ganti 'assets/game-bg.mp3' di bawah ini -->
-    <audio id="bgMusic" src="assets/bg-music.mp3" loop></audio>
-
     <script>
         // --- 1. PAGE NAVIGATION LOGIC ---
         let playerName = "Player";
@@ -326,6 +322,7 @@
             mk.classList.add('opacity-100');
         });
 
+
         // Event listener tombol kembali di page about
         document.getElementById('btn-back-about').addEventListener('click', () => {
             showPage('page-home');
@@ -340,12 +337,6 @@
             playerName = input;
             document.getElementById('dispPlayerName').textContent = playerName;
             
-            // --- PLAY MUSIC DISINI ---
-            const audio = document.getElementById('bgMusic');
-            audio.volume = 0.4; // Atur volume musiknya di sini (0.0 sampai 1.0)
-            audio.play().catch(e => console.log("Gagal memutar audio:", e));
-            // --------------------------
-
             showPage('page-game');
             setupLevelVisuals(); 
             showLevelOverlay();
@@ -355,12 +346,6 @@
             level = 0;
             state = { score:0, kicks:0, targetCount:0, goalCount:0, missCount:0, done:false };
             isPlaying = false;
-            
-            // --- STOP MUSIC DISINI ---
-            const audio = document.getElementById('bgMusic');
-            audio.pause();
-            audio.currentTime = 0;
-            // --------------------------
             
             document.getElementById('menu-utama').classList.remove('opacity-0', 'pointer-events-none', 'scale-110');
             document.getElementById('menu-karakter').classList.add('opacity-0', 'pointer-events-none');
@@ -541,7 +526,7 @@
                 return;
             }
             if (b < 0 || b > 100) {
-                alert("⚠️ Error: Vektor B (Kekuatan) harus antara 0 sampai 100. Nggak bisa minus! dan gabisa > 100");
+                alert("⚠️ Error: Vektor B (Kekuatan) harus antara 0 sampai 100. Nggak bisa minus!");
                 return;
             }
             
