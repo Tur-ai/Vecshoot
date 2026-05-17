@@ -54,7 +54,8 @@
         .field-stripe { background: repeating-linear-gradient(180deg, #16a34a 0px, #16a34a 40px, #15803d 40px, #15803d 80px); }
         .overlay-bg { background: rgba(0,0,0,0.88); backdrop-filter: blur(4px); }
         input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-        input[type=number] { -moz-appearance: textfield; }
+        input[type=number] { -moz-appearance: textfield; /* Pikeun Firefox heubeul */
+                            appearance: textfield;}
 
         .screen-result { width: 100vw; height: 100vh; position: fixed; inset: 0; z-index: 50; display: none !important; align-items: center; justify-content: center; }
         .screen-result.active { display: flex !important; }
@@ -136,7 +137,7 @@
 </head>
 <body class="bg-gray-900 text-white">
 
-    <img id="global-bg" src="assets/lapangan-HD.png" onerror="this.style.display='none'" class="fixed inset-0 w-full h-full object-cover object-bottom -z-20 opacity-50 pointer-events-none" alt="BG">
+    <img id="global-bg" src="assets/lapangan-HD_11zon.png" onerror="this.style.display='none'" class="fixed inset-0 w-full h-full object-cover object-bottom -z-20 opacity-50 pointer-events-none" alt="BG">
 
     <section id="page-home" class="page-section active">
         <div id="menu-utama" class="absolute inset-0 z-20 w-full h-full flex flex-col items-center justify-center transition-all duration-500 ease-in-out">
